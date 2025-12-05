@@ -6,13 +6,14 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import sim.UI.MemoryGrid;
 import sim.modelo.Frame;
+import sim.modelo.LLMProcess;
 import sim.modelo.PhysicalMemory;
 import sim.negocio.MMUService;
 import sim.negocio.SimulationManager;
+import sim.util.Constantes;
 
-import java.io.IOException;
+import java.util.Collections;
 
 public class CordinadorApp {
     private final Stage stage;
@@ -28,26 +29,29 @@ public class CordinadorApp {
     }
 
     public void iniciarAplicacion() {
-        try {
-            // 1. Inicializar el NEGOCIO (Hardware simulado)
-            inicializarNegocio();
+        // 1. Primero inicializamos el modelo y el negocio
+        inicializarNegocio();
 
-            // 2. Cargar la VISTA (FXML)
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("src/main/resources/visualizacion.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/visualizacion.fxml"));
+
+        try {
             Parent root = loader.load();
 
-            // 3. Obtener el controlador de UI y configurarlo
             this.uiController = loader.getController();
+            if (this.uiController == null) {
+                throw new RuntimeException("Error: El FXML no tiene un fx:controller asignado o no se pudo cargar.");
+            }
+
+            // 2. Conectamos la lógica con la UI ahora que ambos existen
             conectarLogicaConUI();
 
-            // 4. Mostrar ventana
             Scene scene = new Scene(root);
-            stage.setTitle("Simulador PagedAttention");
             stage.setScene(scene);
             stage.show();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -58,34 +62,97 @@ public class CordinadorApp {
     }
 
     private void conectarLogicaConUI() {
-        // A. Inyectar componentes visuales complejos
-        uiController.inyectarMemoryGrid(new MemoryGrid(ram.getSize()));
+        // 1. Inyectar la Grilla de Memoria (Visual)
+        sim.UI.MemoryGrid gridVisual = new sim.UI.MemoryGrid(ram.getSize());
+        uiController.inyectarMemoryGrid(gridVisual);
 
-        // B. Definir qué pasa cuando tocan los botones
-        uiController.setOnIniciar(() -> simulador.iniciar());
-        uiController.setOnDetener(() -> simulador.detener());
+        // 2. Conectar Botones (Vista -> Negocio)
+        uiController.setOnIniciar(() -> {
+            simulador.iniciar();
+        });
 
-        // C. Definir qué pasa cuando el simulador avisa cambios
+        uiController.setOnDetener(() -> {
+            simulador.detener();
+        });
+
+        // 3. Conectar Actualizaciones del Simulador (Negocio -> Vista)
         simulador.setOnUpdate(() -> {
-            // Usamos Platform.runLater AQUÍ, centralizado
+            // Usamos Platform.runLater para volver al hilo gráfico
             Platform.runLater(this::sincronizarDatosConVista);
         });
+
+        // 4. Configurar la Selección de Tabla (Interacción Maestro-Detalle)
+        uiController.getTablaProcesos().getSelectionModel().selectedItemProperty()
+                .addListener((obs, oldSelection, newSelection) -> {
+                    if (newSelection != null) {
+                        // A. Actualizamos la tabla pequeña con la Tabla de Páginas del proceso
+                        uiController.mostrarTablaPaginas(newSelection.getPageTable().getMapa());
+
+                        // B. Forzamos un repintado inmediato de la memoria para iluminar bloques en Naranja
+                        sincronizarDatosConVista();
+                    } else {
+                        uiController.mostrarTablaPaginas(Collections.emptyMap());
+                    }
+                });
     }
 
-    // Este método pasa los datos crudos del Modelo a la Vista
+    // Este método debe estar FUERA de conectarLogicaConUI
     private void sincronizarDatosConVista() {
-        // 1. Actualizar colores de la RAM
+        // -------------------------------------------------------------
+        // PASO 1: Capturar el estado actual de la UI (Qué está mirando el usuario)
+        // -------------------------------------------------------------
+        LLMProcess procesoSeleccionado = uiController.getTablaProcesos().getSelectionModel().getSelectedItem();
+        int pidSeleccionado = (procesoSeleccionado != null) ? procesoSeleccionado.getPid() : -1;
+
+        // -------------------------------------------------------------
+        // PASO 2: Pintar el Mapa de Memoria (Lógica Semántica)
+        // -------------------------------------------------------------
         for (int i = 0; i < ram.getSize(); i++) {
-            Frame f = ram.getFrame(i);
-            Color c = f.isOcupado() ? Color.TOMATO : Color.LIGHTGRAY;
-            // (Podrías mejorar esto obteniendo el color real del proceso)
-            uiController.pintarBloqueMemoria(i, c);
+            Frame frame = ram.getFrame(i);
+            Color colorPintar;
+
+            if (!frame.isOcupado()) {
+                // ESTADO: LIBRE -> Gris Claro
+                colorPintar = Color.web(Constantes.COLOR_LIBRE);
+            } else {
+                if (frame.getProcessId() == pidSeleccionado) {
+                    // ESTADO: DESTACADO -> Naranja (Páginas del proceso seleccionado)
+                    colorPintar = Color.web(Constantes.COLOR_DESTACADO); // DarkOrange
+                } else {
+                    // ESTADO: OCUPADO POR OTROS -> Azul Acero
+                    colorPintar = Color.web(Constantes.COLOR_OCUPADO); // SlateGray
+                }
+            }
+
+            uiController.pintarBloqueMemoria(i, colorPintar);
         }
 
-        // 2. Actualizar Métricas
-        uiController.actualizarEstadisticas(mmu.getTlb().getHits(), mmu.getTlb().getMisses());
-
-        // 3. Actualizar Tabla
+        // -------------------------------------------------------------
+        // PASO 3: Actualizar la Tabla de Procesos (Sin romper la selección)
+        // -------------------------------------------------------------
         uiController.actualizarListaProcesos(simulador.getProcesosActivos());
+
+        // Truco: Restaurar la selección si el proceso sigue vivo
+        if (pidSeleccionado != -1) {
+            boolean procesoSigueVivo = false;
+            for (LLMProcess p : uiController.getTablaProcesos().getItems()) {
+                if (p.getPid() == pidSeleccionado) {
+                    uiController.getTablaProcesos().getSelectionModel().select(p);
+                    procesoSigueVivo = true;
+                    break;
+                }
+            }
+            // Si el proceso murió o terminó, limpiamos la tabla de detalle
+            if (!procesoSigueVivo) {
+                uiController.mostrarTablaPaginas(Collections.emptyMap());
+            }
+        }
+
+        // -------------------------------------------------------------
+        // PASO 4: Actualizar Estadísticas de la TLB
+        // -------------------------------------------------------------
+        long hits = mmu.getTlb().getHits();
+        long misses = mmu.getTlb().getMisses();
+        uiController.actualizarEstadisticas(hits, misses);
     }
 }

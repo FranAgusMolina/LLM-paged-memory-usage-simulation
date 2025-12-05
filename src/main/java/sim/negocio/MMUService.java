@@ -46,8 +46,7 @@ public class MMUService {
 
             // 2. Ocupar el marco físico
             Frame frame = ram.getFrame(idMarcoLibre);
-            frame.asignar(proceso.getPid());
-
+            frame.asignar(proceso.getPid(), proceso.getColorHex());
             // 3. Actualizar la Tabla de Páginas del proceso (Lógica -> Física)
             int nuevaPaginaVirtual = totalTokens / pageSize;
             proceso.getPageTable().agregarEntrada(nuevaPaginaVirtual, idMarcoLibre);

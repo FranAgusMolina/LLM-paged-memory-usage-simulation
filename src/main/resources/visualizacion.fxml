@@ -13,57 +13,98 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane prefHeight="720.0" prefWidth="1100.0"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="sim.controlador.ControladorUI">
 
     <top>
         <Label text="Simulador PagedAttention - Arquitectura de Computadoras" BorderPane.alignment="CENTER">
-            <font><Font name="System Bold" size="16.0" /></font>
-            <padding><Insets bottom="10.0" top="10.0" /></padding>
+            <font>
+                <Font name="System Bold" size="18.0" />
+            </font>
+            <padding>
+                <Insets bottom="15.0" top="15.0" />
+            </padding>
         </Label>
     </top>
 
     <left>
-        <VBox prefHeight="200.0" prefWidth="180.0" spacing="10.0" BorderPane.alignment="CENTER">
-            <padding><Insets left="10.0" right="10.0" top="10.0" /></padding>
+        <VBox prefWidth="200.0" spacing="10.0" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            </padding>
 
-            <TitledPane text="Simulación" collapsible="false">
-                <VBox spacing="5.0">
-                    <Button fx:id="btnIniciar" text="▶ Iniciar" maxWidth="Infinity" onAction="#onBtnStartClick"/>
-                    <Button fx:id="btnDetener" text="⏹ Detener" maxWidth="Infinity" disable="true" onAction="#onBtnStopClick"/>
+            <TitledPane collapsible="false" text="Control de Simulación">
+                <VBox spacing="10.0">
+                    <Button fx:id="btnIniciar" maxWidth="1.7976931348623157E308" onAction="#onBtnStartClick" text="▶ INICIAR" textFill="#009933">
+                        <font><Font name="System Bold" size="12.0" /></font>
+                    </Button>
+                    <Button fx:id="btnDetener" disable="true" maxWidth="1.7976931348623157E308" onAction="#onBtnStopClick" text="⏹ DETENER" textFill="#cc0000">
+                        <font><Font name="System Bold" size="12.0" /></font>
+                    </Button>
                 </VBox>
             </TitledPane>
 
-            <TitledPane text="TLB Stats" collapsible="false">
+            <TitledPane collapsible="false" text="Métricas TLB">
                 <VBox spacing="5.0">
-                    <Label fx:id="lblHits" text="Hits: 0" textFill="GREEN"/>
-                    <Label fx:id="lblMisses" text="Misses: 0" textFill="RED"/>
+                    <Label fx:id="lblHits" text="Hits: 0" textFill="#2e7d32">
+                        <font><Font name="Monospaced Bold" size="14.0" /></font>
+                    </Label>
+                    <Label fx:id="lblMisses" text="Misses: 0" textFill="#c62828">
+                        <font><Font name="Monospaced Bold" size="14.0" /></font>
+                    </Label>
+                    <Label fx:id="lblRate" text="Hit Rate: 0.0%">
+                        <font><Font name="System Italic" size="12.0" /></font>
+                    </Label>
                 </VBox>
             </TitledPane>
         </VBox>
     </left>
 
     <center>
-        <ScrollPane fx:id="scrollMemoria" fitToWidth="true" fitToHeight="true" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+        <VBox spacing="5.0">
+            <padding><Insets bottom="5.0" left="5.0" right="5.0" top="5.0" /></padding>
+            <Label text="Mapa de Marcos Físicos (DRAM) - [Verde: Libre | Color: Ocupado]" textFill="#666666" />
+
+            <ScrollPane fx:id="scrollMemoria" fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS" />
+        </VBox>
     </center>
 
     <right>
-        <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="250.0" BorderPane.alignment="CENTER">
+        <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefWidth="320.0" BorderPane.alignment="CENTER">
+
             <VBox>
-                <Label text="Procesos Activos" />
+                <Label text="Procesos Activos (Conversaciones)">
+                    <padding><Insets bottom="5.0" left="5.0" top="5.0" /></padding>
+                    <font><Font name="System Bold" size="12.0" /></font>
+                </Label>
                 <TableView fx:id="tablaProcesos" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colPid" prefWidth="50.0" text="PID" />
+                        <TableColumn fx:id="colNombre" prefWidth="110.0" text="Usuario" />
+                        <TableColumn fx:id="colTokens" prefWidth="70.0" text="Tokens" />
+                        <TableColumn fx:id="colMarcos" prefWidth="70.0" text="Marcos" />
+                    </columns>
                 </TableView>
             </VBox>
 
             <VBox>
-                <Label text="Tabla de Páginas" />
+                <Label text="Tabla de Páginas (Del proceso seleccionado)">
+                    <padding><Insets bottom="5.0" left="5.0" top="5.0" /></padding>
+                    <font><Font name="System Bold" size="12.0" /></font>
+                </Label>
                 <TableView fx:id="tablaPaginas" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colPaginaVirtual" prefWidth="140.0" text="Pág. Virtual (Lógica)" />
+                        <TableColumn fx:id="colMarcoFisico" prefWidth="140.0" text="Marco Físico (RAM)" />
+                    </columns>
                 </TableView>
             </VBox>
         </SplitPane>
     </right>
 
     <bottom>
-        <TextArea fx:id="txtLog" editable="false" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
     </bottom>
 
 </BorderPane>
