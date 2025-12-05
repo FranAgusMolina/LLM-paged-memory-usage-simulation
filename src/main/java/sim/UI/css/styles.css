@@ -1,0 +1,58 @@
+/* Base oscura */
+.root {
+    -fx-base: #2b2b2b;
+    -fx-background-color: #2b2b2b;
+    -fx-font-family: 'Segoe UI', sans-serif;
+}
+
+/* Botones */
+.button {
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+.btn-success {
+    -fx-background-color: #2e7d32;
+    -fx-text-fill: white;
+}
+.btn-danger {
+    -fx-background-color: #c62828;
+    -fx-text-fill: white;
+}
+
+/* Tablas */
+.table-view {
+    -fx-background-color: #3c3f41;
+}
+.table-view .column-header {
+    -fx-background-color: #454545;
+    -fx-text-fill: white;
+}
+.table-row-cell {
+    -fx-background-color: #3c3f41;
+    -fx-text-fill: white;
+}
+.table-row-cell:odd {
+    -fx-background-color: #424242;
+}
+.table-row-cell:selected {
+    -fx-background-color: #214283;
+}
+
+/* Log Consola */
+.console-log .content {
+    -fx-background-color: #000000;
+    -fx-text-fill: #00ff00;
+    -fx-font-family: 'Consolas', 'Monospace';
+}
+
+/* Labels */
+.metric-label {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+.section-header {
+    -fx-padding: 5;
+    -fx-background-color: #454545;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
