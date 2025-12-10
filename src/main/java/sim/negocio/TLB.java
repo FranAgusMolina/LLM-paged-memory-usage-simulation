@@ -8,71 +8,93 @@ import java.util.Map;
  * dentro del procesador.
  * Su función es guardar las últimas traducciones de página que se usaron
  * para evitar consultar la lenta Tabla de Páginas en RAM.
+ * Utiliza una política de reemplazo LRU (Least Recently Used).
  */
 public class TLB {
     private final int capacidadMaxima;
-
-    // Clave (String): "PID:PaginaVirtual" -> Valor (Integer): MarcoFisico
     private final Map<String, Integer> cache;
+    private int hits = 0;
+    private int misses = 0;
 
-    //Metricas de eficiencia
-    private long hits = 0;
-    private long misses = 0;
-
+    /**
+     * Crea una nueva TLB con la capacidad especificada.
+     * Utiliza un LinkedHashMap con orden de acceso para implementar LRU.
+     *
+     * @param capacidad número máximo de traducciones que puede almacenar
+     */
     public TLB(int capacidad) {
         this.capacidadMaxima = capacidad;
-
-        // El tercer parámetro 'true' activa el "Access Order".
-        // Cada vez que leemos un dato, este se mueve al final de la lista.
-        // El primero de la lista es el "Menos Recientemente Usado" (LRU).
         this.cache = new LinkedHashMap<>(capacidad, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest) {
-                // Si superamos el tamaño, borramos el más viejo automáticamente
                 return size() > capacidadMaxima;
             }
         };
     }
 
-    public long getMisses() {
+    /**
+     * Obtiene el número de fallos de TLB.
+     *
+     * @return cantidad de veces que no se encontró la traducción en cache
+     */
+    public int getMisses() {
         return misses;
     }
 
-    public long getHits() {
+    /**
+     * Obtiene el número de aciertos de TLB.
+     *
+     * @return cantidad de veces que se encontró la traducción en cache
+     */
+    public int getHits() {
         return hits;
     }
 
+    /**
+     * Obtiene el mapa interno de la cache.
+     *
+     * @return mapa con las traducciones almacenadas (clave: "PID:PaginaVirtual", valor: marco físico)
+     */
     public Map<String, Integer> getCache() {
         return cache;
     }
 
+    /**
+     * Obtiene la capacidad máxima de la TLB.
+     *
+     * @return número máximo de entradas que puede almacenar
+     */
     public int getCapacidadMaxima() {
         return capacidadMaxima;
     }
 
     /**
-     * Simulac la consulta de hardware a la TLB
-     * @param pid
-     * @param paginaVirtual
-     * @return
+     * Simula la consulta de hardware a la TLB para traducir una dirección virtual.
+     * Incrementa el contador de hits si encuentra la traducción, o misses si no.
+     *
+     * @param pid identificador del proceso
+     * @param paginaVirtual número de página virtual a traducir
+     * @return número de marco físico si está en cache, null en caso contrario
      */
     public Integer buscar(int pid, int paginaVirtual) {
         String key = generarClave(pid, paginaVirtual);
 
         if (cache.containsKey(key)) {
-            hits++; // ¡Éxito! Ahorramos un viaje a la RAM
+            hits++;
             return cache.get(key);
         }
 
-        misses++; // Fallo. Tendremos que ir a la Tabla de Páginas.
+        misses++;
         return null;
     }
 
     /**
-     * Gaurda una nueva traduccion (se trae de la tabla de paginas)
-     * @param pid
-     * @param paginaVirtual
-     * @param marcoFisico
+     * Guarda una nueva traducción en la TLB.
+     * Si la cache está llena, elimina la entrada menos recientemente usada.
+     *
+     * @param pid identificador del proceso
+     * @param paginaVirtual número de página virtual
+     * @param marcoFisico número de marco físico asignado
      */
     public void agregarEntrada(int pid, int paginaVirtual, int marcoFisico) {
         String key = generarClave(pid, paginaVirtual);
@@ -80,19 +102,21 @@ public class TLB {
     }
 
     /**
-     * En sistemas reales, al cambiar de proceso o liberar memoria,
-     * a veces se limpia la TLB para evitar incoherencias
-     * @param pid
+     * Invalida todas las entradas de la TLB asociadas a un proceso específico.
+     * Se utiliza al cambiar de proceso o liberar memoria para evitar incoherencias.
+     *
+     * @param pid identificador del proceso cuyas entradas se eliminarán
      */
     public void invalidarPorProceso(int pid) {
         cache.entrySet().removeIf(entry -> entry.getKey().startsWith(pid + ":"));
     }
 
     /**
-     * Genera una clave unica
-     * @param pid
-     * @param paginaVirtual
-     * @return
+     * Genera una clave única para identificar una traducción en la cache.
+     *
+     * @param pid identificador del proceso
+     * @param paginaVirtual número de página virtual
+     * @return clave en formato "PID:PaginaVirtual"
      */
     private String generarClave(int pid, int paginaVirtual) {
         return pid + ":" + paginaVirtual;

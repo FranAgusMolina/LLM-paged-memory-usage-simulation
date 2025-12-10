@@ -13,8 +13,15 @@ import java.util.Map;
 public class MMUService {
     private final PhysicalMemory ram;
     private final TLB tlb;
-    private final int pageSize; // Cuántos tokens caben en un marco
+    private final int pageSize;
 
+    /**
+     * Crea una nueva instancia de MMUService.
+     *
+     * @param ram memoria física a gestionar
+     * @param tlbSize tamaño de la TLB
+     * @param PageSize cantidad de tokens por marco
+     */
     public MMUService(PhysicalMemory ram, int tlbSize, int PageSize) {
         this.ram = ram;
         this.tlb = new TLB(tlbSize);
@@ -22,77 +29,63 @@ public class MMUService {
     }
 
     /**
-     * Implementacion de algoritmo de paginacion de atencion de memoria
-     * Asigna espacio para un nuevo token. Si la página actual está llena,
-     * busca un nuevo marco físico libre
-     * @param proceso
-     * @throws Exception
+     * Implementa el algoritmo de paginación para asignar espacio a un nuevo token.
+     * Si la página actual está llena, busca un nuevo marco físico libre.
+     *
+     * @param proceso proceso de LLM
+     * @throws Exception si la memoria está llena
      */
     public void asignarMemoriaParaToken(LLMProcess proceso) throws Exception {
         int totalTokens = proceso.getContadorTokens();
-
-        // Calculamos si necesitamos un NUEVO marco
-        // Si (tokens % tamaño_pagina == 0), significa que llenamos el anterior y necesitamos uno nuevo.
         boolean necesitaNuevoMarco = (totalTokens % pageSize) == 0;
 
         if (necesitaNuevoMarco) {
-            // 1. Buscar hueco libre (Algoritmo First-Fit)
             int idMarcoLibre = buscarMarcoLibre();
 
             if (idMarcoLibre == -1) {
-                // Simulación de "Out of Memory" (Fallo de Página fatal)
                 throw new Exception("MEMORIA LLENA: No se pueden asignar más tokens.");
             }
 
-            // 2. Ocupar el marco físico
             Frame frame = ram.getFrame(idMarcoLibre);
             frame.asignar(proceso.getPid(), proceso.getColorHex());
-            // 3. Actualizar la Tabla de Páginas del proceso (Lógica -> Física)
             int nuevaPaginaVirtual = totalTokens / pageSize;
             proceso.getPageTable().agregarEntrada(nuevaPaginaVirtual, idMarcoLibre);
-
-            // 4. Agregar token al contador del proceso
             proceso.agregarToken();
 
             System.out.println("ASIGNACIÓN: Proceso " + proceso.getPid() +
                     " -> Página Virtual " + nuevaPaginaVirtual +
                     " mapeada a Marco Físico " + idMarcoLibre);
         } else {
-            // Si todavía hay espacio en el marco actual, solo sumamos el token
             proceso.agregarToken();
         }
     }
 
     /**
-     * Simula la lectura de un token especifico
-     * (traduccion de direcciones)
-     * @param proceso
-     * @param tokenIndex
-     * @return
+     * Simula la traducción de una dirección virtual a física para un token específico.
+     *
+     * @param proceso proceso de LLM
+     * @param tokenIndex índice del token
+     * @return número de marco físico o -1 si no existe la traducción
      */
     public int traducirDireccion(LLMProcess proceso, int tokenIndex) {
-        // Calcular en qué página virtual está el token
         int paginaVirtual = tokenIndex / pageSize;
-
-        // 1. Consultar TLB
         Integer marcoFisico = tlb.buscar(proceso.getPid(), paginaVirtual);
 
         if (marcoFisico == null) {
-            // 2. Fallo de TLB -> Ir a Tabla de Páginas
             marcoFisico = proceso.getPageTable().getMarcoFisico(paginaVirtual);
 
             if (marcoFisico != null) {
-                // 3. Cargar en TLB para la próxima
                 tlb.agregarEntrada(proceso.getPid(), paginaVirtual, marcoFisico);
             }
         }
 
-        return (marcoFisico != null) ? marcoFisico : -1; // -1 = Segmentation Fault
+        return (marcoFisico != null) ? marcoFisico : -1;
     }
 
     /**
-     * Recorrer la tabla de páginas y liberar los marcos físicos
-     * @param proceso
+     * Libera todos los marcos físicos ocupados por el proceso y limpia la TLB.
+     *
+     * @param proceso proceso de LLM
      */
     public void liberarMemoria(LLMProcess proceso) {
         Map<Integer, Integer> mapa = proceso.getPageTable().getMapa();
@@ -104,9 +97,9 @@ public class MMUService {
     }
 
     /**
-     * Busca un marco físico libre en la RAM
-     * La primera vez que encuentra uno, lo retorna.
-     * @return
+     * Busca un marco físico libre en la memoria RAM.
+     *
+     * @return índice del marco libre o -1 si no hay disponibles
      */
     private int buscarMarcoLibre() {
         for (int i = 0; i < ram.getSize(); i++) {
@@ -114,10 +107,33 @@ public class MMUService {
                 return i;
             }
         }
-        return -1; // Memoria llena
+        return -1;
     }
 
+    /**
+     * Obtiene la TLB utilizada por la MMU.
+     *
+     * @return instancia de TLB
+     */
     public TLB getTlb() {
         return tlb;
+    }
+
+    /**
+     * Obtiene la cantidad de aciertos en la TLB.
+     *
+     * @return número de hits
+     */
+    public int getTlbHits() {
+        return tlb.getHits();
+    }
+
+    /**
+     * Obtiene la cantidad de fallos en la TLB.
+     *
+     * @return número de misses
+     */
+    public int getTlbMisses() {
+        return tlb.getMisses();
     }
 }

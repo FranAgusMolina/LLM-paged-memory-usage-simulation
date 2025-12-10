@@ -4,53 +4,69 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import sim.util.Constantes;
 
+/**
+ * Componente visual que representa la memoria física como una grilla de bloques.
+ * Permite visualizar el estado de cada marco físico y actualizar su color según la ocupación.
+ */
 public class MemoryGrid extends GridPane {
     private Rectangle[] bloquesVisuales;
-    private final int columnas = 32; // Ancho fijo de la matriz visual
 
+    /**
+     * Crea una nueva grilla de memoria con la cantidad de marcos especificada.
+     *
+     * @param totalMarcos cantidad total de marcos físicos a mostrar
+     */
     public MemoryGrid(int totalMarcos) {
-        this.setHgap(2); // Espacio horizontal entre bloques (pixeles)
-        this.setVgap(2); // Espacio vertical
+        this.setHgap(2);
+        this.setVgap(2);
         this.setStyle("-fx-background-color: #2b2b2b; -fx-padding: 10;");
 
         inicializarGrilla(totalMarcos);
     }
 
+    /**
+     * Inicializa la grilla visual con los bloques correspondientes a cada marco físico.
+     *
+     * @param total cantidad total de marcos físicos
+     */
     private void inicializarGrilla(int total) {
         bloquesVisuales = new Rectangle[total];
+        int columnas = Constantes.COLUMNAS_GRILLA;
 
         for (int i = 0; i < total; i++) {
-            // 1. Crear el rectángulo (Marco Físico)
             Rectangle rect = new Rectangle(18, 18);
-            rect.setFill(Color.web("#444444")); // Gris oscuro (Libre)
-            rect.setStroke(Color.web("#2b2b2b")); // Borde sutil
+            rect.setFill(Color.web(Constantes.COLOR_LIBRE));
+            rect.setStroke(Color.web(Constantes.COLOR_BORDE));
             rect.setArcWidth(5);
             rect.setArcHeight(5);
 
-            // 2. Tooltip: Para ver el ID al pasar el mouse (¡Muy útil para debug!)
-            Tooltip.install(rect, new Tooltip("Marco Físico: " + i));
+            Tooltip.install(rect, new Tooltip("Marco Físico: " + (i + 1)));
 
-            // 3. Guardar referencia para poder pintarlo después
             bloquesVisuales[i] = rect;
-
-            // 4. Ubicar en la grilla (Matemática: fila = i / cols, col = i % cols)
             int fila = i / columnas;
             int col = i % columnas;
             this.add(rect, col, fila);
         }
     }
 
-    // Método rápido para cambiar el color de un bloque específico
+    /**
+     * Cambia el color de un bloque de la grilla para reflejar el estado del marco físico.
+     *
+     * @param idMarco índice del marco físico a actualizar
+     * @param color color a aplicar al bloque
+     */
     public void pintarBloque(int idMarco, Color color) {
         if (idMarco >= 0 && idMarco < bloquesVisuales.length) {
-            bloquesVisuales[idMarco].setFill(color);
+            if (!bloquesVisuales[idMarco].getFill().equals(color)) {
+                bloquesVisuales[idMarco].setFill(color);
 
-            // Efecto visual opcional: Borde brillante si está ocupado
-            if (!color.equals(Color.web("#444444"))) {
-                bloquesVisuales[idMarco].setStroke(color.brighter());
-            } else {
-                bloquesVisuales[idMarco].setStroke(Color.web("#2b2b2b"));
+                if (!color.toString().equals(Color.web(Constantes.COLOR_LIBRE).toString())) {
+                    bloquesVisuales[idMarco].setStroke(color.brighter());
+                } else {
+                    bloquesVisuales[idMarco].setStroke(Color.web(Constantes.COLOR_BORDE));
+                }
             }
         }
     }
