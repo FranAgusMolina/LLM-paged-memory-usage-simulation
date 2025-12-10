@@ -39,6 +39,9 @@
                     <Button fx:id="btnDetener" disable="true" maxWidth="1.7976931348623157E308" onAction="#onBtnStopClick" text="⏹ DETENER" textFill="#cc0000">
                         <font><Font name="System Bold" size="12.0" /></font>
                     </Button>
+                    <Button fx:id="btnReporte" disable="true" maxWidth="1.7976931348623157E308" onAction="#onBtnReporteClick" text="📊 Generar Reporte R" textFill="#000000">
+                        <font><Font name="System Bold" size="12.0" /></font>
+                    </Button>
                 </VBox>
             </TitledPane>
 

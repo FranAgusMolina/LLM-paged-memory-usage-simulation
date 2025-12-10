@@ -20,6 +20,7 @@ public class ControladorUI {
 
     @FXML private Button btnIniciar;
     @FXML private Button btnDetener;
+    @FXML private Button btnReporte;
     @FXML private ScrollPane scrollMemoria;
 
     @FXML private Label lblHits;
@@ -39,6 +40,8 @@ public class ControladorUI {
     private MemoryGrid memoryGrid;
     private Runnable onIniciarAction;
     private Runnable onDetenerAction;
+    private Runnable onReporteAction;
+
 
     /**
      * Metodo llamado automáticamente por JavaFX después de cargar el FXML.
@@ -57,13 +60,10 @@ public class ControladorUI {
     private void configurarTablaProcesos() {
         colPid.setCellValueFactory(cell ->
                 new SimpleIntegerProperty(cell.getValue().getPid()).asObject());
-
         colNombre.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getNombre()));
-
         colTokens.setCellValueFactory(cell ->
                 new SimpleIntegerProperty(cell.getValue().getContadorTokens()).asObject());
-
         colMarcos.setCellValueFactory(cell ->
                 new SimpleIntegerProperty(cell.getValue().getPageTable().getMapa().size()).asObject());
     }
@@ -75,10 +75,10 @@ public class ControladorUI {
     private void configurarTablaPaginas() {
         colPaginaVirtual.setCellValueFactory(cell ->
                 new SimpleIntegerProperty(cell.getValue().getKey()).asObject());
-
         colMarcoFisico.setCellValueFactory(cell ->
                 new SimpleIntegerProperty(cell.getValue().getValue()).asObject());
     }
+
 
     /**
      * Establece la acción a ejecutar al presionar el botón Iniciar.
@@ -99,6 +99,15 @@ public class ControladorUI {
     }
 
     /**
+     * Establece la acción a ejecutar al presionar el botón Reporte.
+     *
+     * @param action callback que genera el reporte
+     */
+    public void setOnReporte(Runnable action) {
+        this.onReporteAction = action;
+    }
+
+    /**
      * Inyecta el componente visual de la grilla de memoria en el ScrollPane.
      *
      * @param grid componente personalizado que visualiza la memoria física
@@ -107,6 +116,16 @@ public class ControladorUI {
         this.memoryGrid = grid;
         this.scrollMemoria.setContent(grid);
     }
+
+    /**
+     * Habilita o deshabilita el botón de reporte.
+     *
+     * @param disable true para deshabilitar, false para habilitar
+     */
+    public void setReporteDisable(boolean disable) {
+        if (btnReporte != null) btnReporte.setDisable(disable);
+    }
+
 
     /**
      * Actualiza las estadísticas de la TLB en la interfaz.
@@ -118,7 +137,6 @@ public class ControladorUI {
     public void actualizarEstadisticas(int hits, int misses) {
         lblHits.setText("Hits: " + hits);
         lblMisses.setText("Misses: " + misses);
-
         int total = hits + misses;
         if (total > 0) {
             double rate = (double) hits / total * 100;
@@ -168,6 +186,7 @@ public class ControladorUI {
         return tablaProcesos;
     }
 
+
     /**
      * Manejador del evento del botón Iniciar.
      * Ejecuta el callback configurado y ajusta el estado de los botones.
@@ -191,6 +210,17 @@ public class ControladorUI {
             onDetenerAction.run();
             btnIniciar.setDisable(false);
             btnDetener.setDisable(true);
+        }
+    }
+
+    /**
+     * Manejador del evento del botón Reporte.
+     * Ejecuta la acción de reporte configurada.
+     */
+    @FXML
+    private void onBtnReporteClick() {
+        if (onReporteAction != null) {
+            onReporteAction.run();
         }
     }
 }

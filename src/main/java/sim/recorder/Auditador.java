@@ -1,5 +1,6 @@
 package sim.recorder;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -8,9 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Clase responsable de auditar y registrar los datos de la simulación en un archivo CSV.
- * Cada instancia crea un archivo único para almacenar los ciclos, procesos activos,
- * marcos ocupados, TLB hits y misses.
+ * Clase responsable de auditar y registrar los datos de la simulación en un archivo CSV temporal.
+ * Cada instancia crea un archivo único que se elimina automáticamente al finalizar el programa.
  */
 public class Auditador {
     private PrintWriter writer;
@@ -18,7 +18,7 @@ public class Auditador {
     private static final String CARPETA_DATOS = "src/main/resources/datos";
 
     /**
-     * Crea un nuevo auditor y prepara el archivo de registro.
+     * Crea un nuevo auditor y prepara el archivo de registro temporal.
      */
     public Auditador() {
         this.nombreArchivo = obtenerNombreArchivo();
@@ -48,11 +48,14 @@ public class Auditador {
     }
 
     /**
-     * Inicializa el archivo de registro y escribe la cabecera.
+     * Inicializa el archivo de registro, escribe la cabecera y marca el archivo para eliminación al salir.
      */
     private void inicializarArchivo() {
         try {
-            writer = new PrintWriter(new FileWriter(nombreArchivo, true));
+            File archivo = new File(nombreArchivo);
+            archivo.deleteOnExit();
+
+            writer = new PrintWriter(new FileWriter(archivo, true));
             writer.println("Ciclo,Procesos_Activos,Marcos_Ocupados,TLB_Hits,TLB_Misses");
             writer.flush();
         } catch (IOException e) {
