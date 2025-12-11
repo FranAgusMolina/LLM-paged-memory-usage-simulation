@@ -1,15 +1,18 @@
 package sim.controlador;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx. beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.paint.Color;
+import javafx. scene.paint.Color;
 import sim.UI.MemoryGrid;
 import sim.modelo.LLMProcess;
+import sim.recorder.RScriptRunner;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controlador de la interfaz gráfica JavaFX que gestiona la visualización
@@ -33,14 +36,14 @@ public class ControladorUI {
     @FXML private TableColumn<LLMProcess, Integer> colTokens;
     @FXML private TableColumn<LLMProcess, Integer> colMarcos;
 
-    @FXML private TableView<Map.Entry<Integer, Integer>> tablaPaginas;
+    @FXML private TableView<Map. Entry<Integer, Integer>> tablaPaginas;
     @FXML private TableColumn<Map.Entry<Integer, Integer>, Integer> colPaginaVirtual;
     @FXML private TableColumn<Map.Entry<Integer, Integer>, Integer> colMarcoFisico;
 
     private MemoryGrid memoryGrid;
     private Runnable onIniciarAction;
     private Runnable onDetenerAction;
-    private Runnable onReporteAction;
+    private RScriptRunner rScriptRunner;
 
 
     /**
@@ -59,7 +62,7 @@ public class ControladorUI {
      */
     private void configurarTablaProcesos() {
         colPid.setCellValueFactory(cell ->
-                new SimpleIntegerProperty(cell.getValue().getPid()).asObject());
+                new SimpleIntegerProperty(cell. getValue().getPid()).asObject());
         colNombre.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getNombre()));
         colTokens.setCellValueFactory(cell ->
@@ -99,12 +102,12 @@ public class ControladorUI {
     }
 
     /**
-     * Establece la acción a ejecutar al presionar el botón Reporte.
+     * Configura el ejecutor de scripts de R para el sistema de reportes.
      *
-     * @param action callback que genera el reporte
+     * @param runner instancia del ejecutor de scripts
      */
-    public void setOnReporte(Runnable action) {
-        this.onReporteAction = action;
+    public void setRScriptRunner(RScriptRunner runner) {
+        this.rScriptRunner = runner;
     }
 
     /**
@@ -173,7 +176,7 @@ public class ControladorUI {
      * @param mapaPaginas mapa de traducciones (página virtual → marco físico)
      */
     public void mostrarTablaPaginas(Map<Integer, Integer> mapaPaginas) {
-        tablaPaginas.getItems().setAll(mapaPaginas.entrySet());
+        tablaPaginas. getItems().setAll(mapaPaginas. entrySet());
     }
 
     /**
@@ -194,9 +197,10 @@ public class ControladorUI {
     @FXML
     private void onBtnStartClick() {
         if (onIniciarAction != null) {
-            onIniciarAction.run();
+            onIniciarAction. run();
             btnIniciar.setDisable(true);
             btnDetener.setDisable(false);
+            btnReporte.setDisable(true);
         }
     }
 
@@ -210,17 +214,87 @@ public class ControladorUI {
             onDetenerAction.run();
             btnIniciar.setDisable(false);
             btnDetener.setDisable(true);
+            btnReporte.setDisable(false);
         }
     }
 
     /**
      * Manejador del evento del botón Reporte.
-     * Ejecuta la acción de reporte configurada.
+     * Muestra diálogo de selección y ejecuta el script de R elegido.
      */
     @FXML
     private void onBtnReporteClick() {
-        if (onReporteAction != null) {
-            onReporteAction.run();
+        if (rScriptRunner == null) {
+            mostrarAlerta("Error", "Sistema de reportes no configurado", Alert.AlertType.ERROR);
+            return;
         }
+
+        List<String> scripts = rScriptRunner.obtenerScriptsDisponibles();
+
+        if (scripts.isEmpty()) {
+            mostrarAlerta("No hay scripts",
+                    "No se encontraron scripts de R.\nColoca archivos .R en:  src/main/resources/scripts_r/",
+                    Alert.AlertType. WARNING);
+            return;
+        }
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(scripts.get(0), scripts);
+        dialog.setTitle("Generar Reporte");
+        dialog.setHeaderText("Selecciona el tipo de análisis");
+        dialog.setContentText("Script de R:");
+        dialog.getDialogPane().setPrefWidth(400);
+
+        Optional<String> resultado = dialog.showAndWait();
+
+        if (resultado.isPresent()) {
+            ejecutarScriptSeleccionado(resultado.get());
+        }
+    }
+
+    /**
+     * Ejecuta el script seleccionado en un hilo separado y muestra el resultado.
+     * Usa Platform.runLater para actualizar la UI desde el hilo de ejecución.
+     *
+     * @param nombreScript nombre del archivo de script a ejecutar
+     */
+    private void ejecutarScriptSeleccionado(String nombreScript) {
+        Alert esperaDialog = new Alert(Alert.AlertType.INFORMATION);
+        esperaDialog.setTitle("Ejecutando.. .");
+        esperaDialog.setHeaderText("Ejecutando script de R");
+        esperaDialog. setContentText("Por favor espera.. .");
+        esperaDialog.show();
+
+        new Thread(() -> {
+            RScriptRunner.ResultadoEjecucion resultado = rScriptRunner.ejecutarScript(nombreScript);
+
+            Platform.runLater(() -> {
+                esperaDialog.close();
+
+                if (resultado.isExitoso()) {
+                    mostrarAlerta("Reporte Generado",
+                            "Script ejecutado exitosamente:\n\n" + resultado.getMensaje(),
+                            Alert.AlertType.INFORMATION);
+                } else {
+                    mostrarAlerta("Error en Script",
+                            resultado.getMensaje(),
+                            Alert.AlertType. ERROR);
+                }
+            });
+        }).start();
+    }
+
+    /**
+     * Muestra un diálogo de alerta genérico.
+     *
+     * @param titulo título de la ventana del diálogo
+     * @param mensaje contenido del mensaje
+     * @param tipo tipo de alerta (INFORMATION, WARNING, ERROR)
+     */
+    private void mostrarAlerta(String titulo, String mensaje, Alert.AlertType tipo) {
+        Alert alert = new Alert(tipo);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
     }
 }

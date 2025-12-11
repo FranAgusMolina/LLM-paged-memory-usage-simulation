@@ -3,15 +3,16 @@ package sim.controlador;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene. Scene;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
-import sim.modelo.Frame;
+import javafx. stage.Stage;
+import sim. modelo.Frame;
 import sim.modelo.LLMProcess;
-import sim.modelo.PhysicalMemory;
+import sim. modelo.PhysicalMemory;
 import sim.negocio.MMUService;
 import sim.negocio.SimulationManager;
-import sim.recorder.Auditador;
+import sim.recorder. Auditador;
+import sim.recorder.RScriptRunner;
 import sim.util.Constantes;
 
 import java.util.Collections;
@@ -51,7 +52,7 @@ public class CordinadorApp {
     public void iniciarAplicacion() {
         inicializarNegocio();
         inicializarRecorder();
-        inicilizarSimulacion();
+        inicializarSimulacion();
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/visualizacion.fxml"));
@@ -78,7 +79,7 @@ public class CordinadorApp {
      * - Unidad de gestión de memoria (MMU) con TLB
      */
     private void inicializarNegocio() {
-        this.ram = new PhysicalMemory(Constantes.TOTAL_MARCOS_RAM);
+        this.ram = new PhysicalMemory(Constantes. TOTAL_MARCOS_RAM);
         this.mmu = new MMUService(ram, Constantes.TAMANIO_TLB, Constantes.TAMANIO_PAGINA);
     }
 
@@ -86,15 +87,20 @@ public class CordinadorApp {
      * Conecta los eventos de la UI con la lógica de simulación:
      * - Inyecta el grid visual de memoria
      * - Configura callbacks de botones (iniciar/detener)
+     * - Configura sistema de reportes con R
      * - Establece listeners para actualización automática
      * - Configura resaltado visual al seleccionar procesos
      */
     private void conectarLogicaConUI() {
-        sim.UI.MemoryGrid gridVisual = new sim.UI.MemoryGrid(ram.getSize());
-        uiController.inyectarMemoryGrid(gridVisual);
+        sim.UI.MemoryGrid gridVisual = new sim.UI.MemoryGrid(ram. getSize());
+        uiController. inyectarMemoryGrid(gridVisual);
 
         uiController.setOnIniciar(() -> simulador.iniciar());
         uiController.setOnDetener(() -> simulador.detener());
+
+        String nombreCSV = auditador.getNombreArchivo();
+        RScriptRunner rRunner = new RScriptRunner(nombreCSV);
+        uiController.setRScriptRunner(rRunner);
 
         simulador.setOnUpdate(() -> Platform.runLater(this::sincronizarSimulacion));
 
@@ -133,7 +139,7 @@ public class CordinadorApp {
 
     /**
      * Actualiza la visualización de la memoria física aplicando colores según el estado:
-     * - Gris: marcos libres
+     * - Gris:  marcos libres
      * - Azul: marcos ocupados por otros procesos
      * - Naranja: marcos del proceso seleccionado (resaltado)
      * También actualiza la tabla de páginas del proceso seleccionado.
@@ -146,7 +152,7 @@ public class CordinadorApp {
             Frame frame = ram.getFrame(i);
             Color colorPintar;
 
-            if (!frame.isOcupado()) {
+            if (! frame.isOcupado()) {
                 colorPintar = Color.web(Constantes.COLOR_LIBRE);
             } else {
                 if (frame.getProcessId() == pidSeleccionado) {
@@ -161,7 +167,7 @@ public class CordinadorApp {
         if (procesoSeleccionado != null) {
             uiController.mostrarTablaPaginas(procesoSeleccionado.getPageTable().getMapa());
         } else {
-            uiController.mostrarTablaPaginas(Collections.emptyMap());
+            uiController. mostrarTablaPaginas(Collections.emptyMap());
         }
     }
 
@@ -169,7 +175,7 @@ public class CordinadorApp {
      * Inicializa el gestor de simulación con los componentes de negocio
      * y el sistema de auditoría.
      */
-    private void inicilizarSimulacion(){
+    private void inicializarSimulacion(){
         this.simulador = new SimulationManager(ram, mmu, auditador);
     }
 
