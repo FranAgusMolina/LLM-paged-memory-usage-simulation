@@ -1,31 +1,19 @@
 package sim.controlador;
 
-import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx. beans.property.SimpleStringProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx. scene.paint.Color;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx. scene.image.Image;
-import javafx. scene.image.ImageView;
-import javafx.scene.layout. VBox;
-import javafx. stage.Stage;
-import java.io.File;
+import javafx.scene.paint.Color;
 import sim.UI.MemoryGrid;
 import sim.modelo.LLMProcess;
 import sim.recorder.RScriptRunner;
-
-import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
- * Controlador de la interfaz gráfica JavaFX que gestiona la visualización
- * de la simulación de memoria paginada.
- * Coordina la actualización de tablas, estadísticas y el grid de memoria visual.
+ * Controlador principal de la interfaz gráfica JavaFX.
+ * Coordina la visualización de la simulación de memoria paginada.
  */
 public class ControladorUI {
 
@@ -44,19 +32,17 @@ public class ControladorUI {
     @FXML private TableColumn<LLMProcess, Integer> colTokens;
     @FXML private TableColumn<LLMProcess, Integer> colMarcos;
 
-    @FXML private TableView<Map. Entry<Integer, Integer>> tablaPaginas;
+    @FXML private TableView<Map.Entry<Integer, Integer>> tablaPaginas;
     @FXML private TableColumn<Map.Entry<Integer, Integer>, Integer> colPaginaVirtual;
     @FXML private TableColumn<Map.Entry<Integer, Integer>, Integer> colMarcoFisico;
 
     private MemoryGrid memoryGrid;
     private Runnable onIniciarAction;
     private Runnable onDetenerAction;
-    private RScriptRunner rScriptRunner;
-
+    private ReportController reporController;
 
     /**
-     * Metodo llamado automáticamente por JavaFX después de cargar el FXML.
-     * Configura el binding de datos para las tablas de procesos y páginas.
+     * Inicializa las tablas al cargar el FXML.
      */
     @FXML
     public void initialize() {
@@ -65,12 +51,11 @@ public class ControladorUI {
     }
 
     /**
-     * Configura el binding de columnas de la tabla de procesos activos.
-     * Enlaza cada columna con las propiedades del objeto LLMProcess.
+     * Configura el binding de la tabla de procesos.
      */
     private void configurarTablaProcesos() {
         colPid.setCellValueFactory(cell ->
-                new SimpleIntegerProperty(cell. getValue().getPid()).asObject());
+                new SimpleIntegerProperty(cell.getValue().getPid()).asObject());
         colNombre.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getNombre()));
         colTokens.setCellValueFactory(cell ->
@@ -80,8 +65,7 @@ public class ControladorUI {
     }
 
     /**
-     * Configura el binding de columnas de la tabla de páginas.
-     * Muestra las traducciones de página virtual a marco físico.
+     * Configura el binding de la tabla de páginas.
      */
     private void configurarTablaPaginas() {
         colPaginaVirtual.setCellValueFactory(cell ->
@@ -90,38 +74,37 @@ public class ControladorUI {
                 new SimpleIntegerProperty(cell.getValue().getValue()).asObject());
     }
 
-
     /**
-     * Establece la acción a ejecutar al presionar el botón Iniciar.
+     * Establece la acción del botón Iniciar.
      *
-     * @param action callback que inicia la simulación
+     * @param action callback de inicio
      */
     public void setOnIniciar(Runnable action) {
         this.onIniciarAction = action;
     }
 
     /**
-     * Establece la acción a ejecutar al presionar el botón Detener.
+     * Establece la acción del botón Detener.
      *
-     * @param action callback que detiene la simulación
+     * @param action callback de detención
      */
     public void setOnDetener(Runnable action) {
         this.onDetenerAction = action;
     }
 
     /**
-     * Configura el ejecutor de scripts de R para el sistema de reportes.
+     * Configura el sistema de reportes.
      *
      * @param runner instancia del ejecutor de scripts
      */
     public void setRScriptRunner(RScriptRunner runner) {
-        this.rScriptRunner = runner;
+        this.reporController = new ReportController(runner);
     }
 
     /**
-     * Inyecta el componente visual de la grilla de memoria en el ScrollPane.
+     * Inyecta el grid de memoria en el ScrollPane.
      *
-     * @param grid componente personalizado que visualiza la memoria física
+     * @param grid componente visual de memoria
      */
     public void inyectarMemoryGrid(MemoryGrid grid) {
         this.memoryGrid = grid;
@@ -131,19 +114,17 @@ public class ControladorUI {
     /**
      * Habilita o deshabilita el botón de reporte.
      *
-     * @param disable true para deshabilitar, false para habilitar
+     * @param disable true para deshabilitar
      */
     public void setReporteDisable(boolean disable) {
         if (btnReporte != null) btnReporte.setDisable(disable);
     }
 
-
     /**
-     * Actualiza las estadísticas de la TLB en la interfaz.
-     * Calcula y muestra el porcentaje de aciertos (hit rate).
+     * Actualiza las estadísticas de la TLB.
      *
-     * @param hits número de aciertos en la TLB
-     * @param misses número de fallos en la TLB
+     * @param hits aciertos en TLB
+     * @param misses fallos en TLB
      */
     public void actualizarEstadisticas(int hits, int misses) {
         lblHits.setText("Hits: " + hits);
@@ -158,10 +139,10 @@ public class ControladorUI {
     }
 
     /**
-     * Cambia el color de un bloque específico en la grilla de memoria.
+     * Pinta un bloque de memoria.
      *
-     * @param index índice del marco físico a pintar
-     * @param color color que representa el estado del marco
+     * @param index índice del marco
+     * @param color color a aplicar
      */
     public void pintarBloqueMemoria(int index, Color color) {
         if (memoryGrid != null) {
@@ -170,37 +151,34 @@ public class ControladorUI {
     }
 
     /**
-     * Actualiza la lista de procesos activos en la tabla.
+     * Actualiza la lista de procesos en la tabla.
      *
-     * @param procesos lista de procesos LLM actualmente en ejecución
+     * @param procesos lista de procesos activos
      */
     public void actualizarListaProcesos(List<LLMProcess> procesos) {
         tablaProcesos.getItems().setAll(procesos);
     }
 
     /**
-     * Actualiza la tabla de páginas con las traducciones del proceso seleccionado.
+     * Muestra la tabla de páginas del proceso seleccionado.
      *
-     * @param mapaPaginas mapa de traducciones (página virtual → marco físico)
+     * @param mapaPaginas mapa de traducciones
      */
     public void mostrarTablaPaginas(Map<Integer, Integer> mapaPaginas) {
-        tablaPaginas. getItems().setAll(mapaPaginas. entrySet());
+        tablaPaginas.getItems().setAll(mapaPaginas.entrySet());
     }
 
     /**
      * Obtiene la referencia a la tabla de procesos.
-     * Permite al coordinador agregar listeners de selección.
      *
-     * @return tabla de procesos activos
+     * @return tabla de procesos
      */
     public TableView<LLMProcess> getTablaProcesos() {
         return tablaProcesos;
     }
 
-
     /**
-     * Manejador del evento del botón Iniciar.
-     * Ejecuta el callback configurado y ajusta el estado de los botones.
+     * Maneja el clic en el botón Iniciar.
      */
     @FXML
     private void onBtnStartClick() {
@@ -213,8 +191,7 @@ public class ControladorUI {
     }
 
     /**
-     * Manejador del evento del botón Detener.
-     * Ejecuta el callback configurado y ajusta el estado de los botones.
+     * Maneja el clic en el botón Detener.
      */
     @FXML
     private void onBtnStopClick() {
@@ -227,129 +204,12 @@ public class ControladorUI {
     }
 
     /**
-     * Manejador del evento del botón Reporte.
-     * Muestra diálogo de selección y ejecuta el script de R elegido.
+     * Maneja el clic en el botón Reporte.
      */
     @FXML
     private void onBtnReporteClick() {
-        if (rScriptRunner == null) {
-            mostrarAlerta("Error", "Sistema de reportes no configurado", Alert.AlertType.ERROR);
-            return;
+        if (reporController != null) {
+            reporController.generarReporte();
         }
-
-        List<String> scripts = rScriptRunner.obtenerScriptsDisponibles();
-
-        if (scripts.isEmpty()) {
-            mostrarAlerta("No hay scripts",
-                    "No se encontraron scripts de R.\nColoca archivos .R en:  src/main/resources/scripts_r/",
-                    Alert.AlertType. WARNING);
-            return;
-        }
-
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(scripts.get(0), scripts);
-        dialog.setTitle("Generar Reporte");
-        dialog.setHeaderText("Selecciona el tipo de análisis");
-        dialog.setContentText("Script de R:");
-        dialog.getDialogPane().setPrefWidth(400);
-
-        Optional<String> resultado = dialog.showAndWait();
-
-        if (resultado.isPresent()) {
-            ejecutarScriptSeleccionado(resultado.get());
-        }
-    }
-
-    /**
-     * Ejecuta el script seleccionado en un hilo separado y muestra el resultado.
-     * Si el script genera imágenes, las muestra en un diálogo visual.
-     *
-     * @param nombreScript nombre del archivo de script a ejecutar
-     */
-    private void ejecutarScriptSeleccionado(String nombreScript) {
-        Alert esperaDialog = new Alert(Alert.AlertType.INFORMATION);
-        esperaDialog.setTitle("Ejecutando.. .");
-        esperaDialog.setHeaderText("Ejecutando script de R");
-        esperaDialog.setContentText("Por favor espera...");
-        esperaDialog.show();
-
-        new Thread(() -> {
-            RScriptRunner. ResultadoEjecucion resultado = rScriptRunner.ejecutarScript(nombreScript);
-            List<File> archivosGenerados = rScriptRunner.obtenerArchivosGenerados(nombreScript);
-
-            Platform.runLater(() -> {
-                esperaDialog.close();
-
-                if (resultado.isExitoso()) {
-                    // Mostrar mensaje de éxito
-                    mostrarAlerta("Reporte Generado",
-                            "Script ejecutado exitosamente:\n\n" + resultado.getMensaje(),
-                            Alert.AlertType.INFORMATION);
-
-                    // Si hay imágenes, mostrarlas
-                    if (!archivosGenerados.isEmpty()) {
-                        mostrarImagenesGeneradas(archivosGenerados);
-                    }
-                } else {
-                    mostrarAlerta("Error en Script",
-                            resultado.getMensaje(),
-                            Alert.AlertType.ERROR);
-                }
-            });
-        }).start();
-    }
-
-    /**
-     * Muestra las imágenes generadas por el script en una nueva ventana.
-     *
-     * @param archivos lista de archivos de imagen a mostrar
-     */
-    private void mostrarImagenesGeneradas(List<File> archivos) {
-        Stage stage = new Stage();
-        stage.setTitle("Gráficos Generados");
-
-        VBox contenedor = new VBox(10);
-        contenedor.setPadding(new Insets(15));
-        contenedor.setStyle("-fx-background-color: white;");
-
-        ScrollPane scrollPane = new ScrollPane(contenedor);
-        scrollPane.setFitToWidth(true);
-
-        for (File archivo : archivos) {
-            try {
-                Image imagen = new Image(archivo.toURI().toString());
-                ImageView imageView = new ImageView(imagen);
-                imageView.setPreserveRatio(true);
-                imageView.setFitWidth(900);
-
-                Label titulo = new Label("📊 " + archivo.getName());
-                titulo.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
-
-                VBox bloqueImagen = new VBox(5, titulo, imageView);
-                bloqueImagen.setStyle("-fx-border-color: #cccccc; -fx-border-width: 1; -fx-padding: 10;");
-
-                contenedor. getChildren().add(bloqueImagen);
-            } catch (Exception e) {
-                System.err.println("Error al cargar imagen: " + archivo.getName());
-            }
-        }
-
-        Scene scene = new Scene(scrollPane, 950, 700);
-        stage.setScene(scene);
-        stage.show();
-    }
-
-    /**
-     * Muestra un diálogo de alerta genérico.
-     *
-     * @param titulo título de la ventana del diálogo
-     * @param mensaje contenido del mensaje
-     * @param tipo tipo de alerta (INFORMATION, WARNING, ERROR)
-     */
-    private void mostrarAlerta(String titulo, String mensaje, Alert.AlertType tipo) {
-        Alert alert = new Alert(tipo);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
     }
 }
