@@ -4,6 +4,7 @@ import java. io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -152,5 +153,28 @@ public class RScriptRunner {
         public String getMensaje() {
             return mensaje;
         }
+    }
+
+    /**
+     * Verifica si el script genera archivos de salida (imágenes, reportes).
+     *
+     * @param nombreScript nombre del script ejecutado
+     * @return lista de archivos generados
+     */
+    public List<File> obtenerArchivosGenerados(String nombreScript) {
+        List<File> archivos = new ArrayList<>();
+        File directorioActual = new File(System.getProperty("user.dir"));
+
+        // Buscar archivos PNG y PDF recién creados
+        File[] posiblesArchivos = directorioActual.listFiles((dir, name) ->
+                (name.endsWith(".png") || name.endsWith(".pdf")) &&
+                        new File(dir, name).lastModified() > System.currentTimeMillis() - 10000 // últimos 10 segundos
+        );
+
+        if (posiblesArchivos != null) {
+            archivos.addAll(Arrays.asList(posiblesArchivos));
+        }
+
+        return archivos;
     }
 }

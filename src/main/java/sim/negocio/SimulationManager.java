@@ -5,9 +5,9 @@ import sim.modelo.PhysicalMemory;
 import sim.recorder.Auditador;
 import sim.util.Constantes;
 
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util. List;
+import java.util. Random;
+import java.util. concurrent.CopyOnWriteArrayList;
 
 /**
  * Administra la simulación de procesos LLM y la gestión de memoria.
@@ -18,9 +18,13 @@ public class SimulationManager implements Runnable{
     private final MMUService mmu;
     private final Auditador auditador;
     private final List<LLMProcess> procesosActivos;
-    private boolean running = false;
+    private volatile boolean running = false;
+    private volatile boolean paused = false;
+    private final Object pauseLock = new Object();
     private final Random random = new Random();
     private Runnable onUpdateCallback;
+    private Thread simulationThread;
+    private int ciclo = 0;
 
     /**
      * Crea un nuevo SimulationManager con los componentes principales.
@@ -38,21 +42,64 @@ public class SimulationManager implements Runnable{
 
     /**
      * Inicia la simulación en un hilo separado.
+     * Si la simulación está pausada, la reanuda.
+     * Si no está corriendo, crea un nuevo hilo.
      */
     public void iniciar() {
+        if (running && paused) {
+            reanudar();
+            return;
+        }
+
         if (running) return;
+
         running = true;
-        new Thread(this).start();
+        paused = false;
+        simulationThread = new Thread(this);
+        simulationThread.start();
         System.out.println("SIMULACIÓN: Iniciada.");
     }
 
     /**
-     * Detiene la simulación y cierra el auditor.
+     * Pausa la simulación sin detener el hilo.
+     * Permite reanudar desde el mismo punto.
+     */
+    public void pausar() {
+        if (!running || paused) return;
+        paused = true;
+        System.out.println("SIMULACIÓN: Pausada en ciclo " + ciclo);
+    }
+
+    /**
+     * Reanuda la simulación desde el punto donde fue pausada.
+     */
+    public void reanudar() {
+        if (!running || ! paused) return;
+        synchronized (pauseLock) {
+            paused = false;
+            pauseLock.notifyAll();
+        }
+        System.out. println("SIMULACIÓN: Reanudada desde ciclo " + ciclo);
+    }
+
+    /**
+     * Detiene completamente la simulación y cierra el auditor.
      */
     public void detener() {
+        if (!running) return;
         running = false;
+        paused = false;
+
+        synchronized (pauseLock) {
+            pauseLock.notifyAll();
+        }
+
+        if (simulationThread != null) {
+            simulationThread.interrupt();
+        }
+
         auditador.cerrar();
-        System.out.println("SIMULACIÓN: Detenida.");
+        System.out.println("SIMULACIÓN: Detenida completamente en ciclo " + ciclo);
     }
 
     /**
@@ -66,13 +113,20 @@ public class SimulationManager implements Runnable{
 
     /**
      * Lógica principal del ciclo de simulación.
+     * Mantiene el contador de ciclos entre pausas.
      */
     @Override
     public void run() {
-        int ciclo = 0;
-
         while (running) {
             try {
+                synchronized (pauseLock) {
+                    while (paused && running) {
+                        pauseLock.wait();
+                    }
+                }
+
+                if (! running) break;
+
                 System.out.println("--- CICLO " + ciclo + " ---");
 
                 if (random.nextDouble() < 0.3) {
@@ -81,10 +135,10 @@ public class SimulationManager implements Runnable{
 
                 for (LLMProcess proceso : procesosActivos) {
                     try {
-                        mmu.asignarMemoriaParaToken(proceso);
+                        mmu. asignarMemoriaParaToken(proceso);
                         mmu.traducirDireccion(proceso, proceso.getContadorTokens() - 1);
                     } catch (Exception e) {
-                        System.err.println("Error con proceso " + proceso.getPid() + ": " + e.getMessage());
+                        System.err. println("Error con proceso " + proceso.getPid() + ": " + e.getMessage());
                         eliminarProceso(proceso);
                     }
                 }
@@ -118,10 +172,10 @@ public class SimulationManager implements Runnable{
      * @param id identificador del proceso
      */
     private void crearNuevoProceso(int id) {
-        String color = String.format("#%06x", random.nextInt(0xffffff + 1));
+        String color = String. format("#%06x", random. nextInt(0xffffff + 1));
         LLMProcess nuevo = new LLMProcess(id, "User-" + id, color);
         procesosActivos.add(nuevo);
-        System.out.println("NUEVO PROCESO: " + nuevo.getNombre() + " ha llegado.");
+        System.out.println("NUEVO PROCESO: " + nuevo. getNombre() + " ha llegado.");
     }
 
     /**
@@ -142,5 +196,32 @@ public class SimulationManager implements Runnable{
      */
     public List<LLMProcess> getProcesosActivos() {
         return procesosActivos;
+    }
+
+    /**
+     * Verifica si la simulación está en ejecución.
+     *
+     * @return true si la simulación está corriendo
+     */
+    public boolean isRunning() {
+        return running;
+    }
+
+    /**
+     * Verifica si la simulación está pausada.
+     *
+     * @return true si la simulación está en pausa
+     */
+    public boolean isPaused() {
+        return paused;
+    }
+
+    /**
+     * Obtiene el número del ciclo actual.
+     *
+     * @return número de ciclo actual
+     */
+    public int getCicloActual() {
+        return ciclo;
     }
 }

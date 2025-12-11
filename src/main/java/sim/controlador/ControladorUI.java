@@ -6,10 +6,18 @@ import javafx. beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx. scene.paint.Color;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx. scene.image.Image;
+import javafx. scene.image.ImageView;
+import javafx.scene.layout. VBox;
+import javafx. stage.Stage;
+import java.io.File;
 import sim.UI.MemoryGrid;
 import sim.modelo.LLMProcess;
 import sim.recorder.RScriptRunner;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -197,7 +205,7 @@ public class ControladorUI {
     @FXML
     private void onBtnStartClick() {
         if (onIniciarAction != null) {
-            onIniciarAction. run();
+            onIniciarAction.run();
             btnIniciar.setDisable(true);
             btnDetener.setDisable(false);
             btnReporte.setDisable(true);
@@ -253,7 +261,7 @@ public class ControladorUI {
 
     /**
      * Ejecuta el script seleccionado en un hilo separado y muestra el resultado.
-     * Usa Platform.runLater para actualizar la UI desde el hilo de ejecución.
+     * Si el script genera imágenes, las muestra en un diálogo visual.
      *
      * @param nombreScript nombre del archivo de script a ejecutar
      */
@@ -261,26 +269,73 @@ public class ControladorUI {
         Alert esperaDialog = new Alert(Alert.AlertType.INFORMATION);
         esperaDialog.setTitle("Ejecutando.. .");
         esperaDialog.setHeaderText("Ejecutando script de R");
-        esperaDialog. setContentText("Por favor espera.. .");
+        esperaDialog.setContentText("Por favor espera...");
         esperaDialog.show();
 
         new Thread(() -> {
-            RScriptRunner.ResultadoEjecucion resultado = rScriptRunner.ejecutarScript(nombreScript);
+            RScriptRunner. ResultadoEjecucion resultado = rScriptRunner.ejecutarScript(nombreScript);
+            List<File> archivosGenerados = rScriptRunner.obtenerArchivosGenerados(nombreScript);
 
             Platform.runLater(() -> {
                 esperaDialog.close();
 
                 if (resultado.isExitoso()) {
+                    // Mostrar mensaje de éxito
                     mostrarAlerta("Reporte Generado",
                             "Script ejecutado exitosamente:\n\n" + resultado.getMensaje(),
                             Alert.AlertType.INFORMATION);
+
+                    // Si hay imágenes, mostrarlas
+                    if (!archivosGenerados.isEmpty()) {
+                        mostrarImagenesGeneradas(archivosGenerados);
+                    }
                 } else {
                     mostrarAlerta("Error en Script",
                             resultado.getMensaje(),
-                            Alert.AlertType. ERROR);
+                            Alert.AlertType.ERROR);
                 }
             });
         }).start();
+    }
+
+    /**
+     * Muestra las imágenes generadas por el script en una nueva ventana.
+     *
+     * @param archivos lista de archivos de imagen a mostrar
+     */
+    private void mostrarImagenesGeneradas(List<File> archivos) {
+        Stage stage = new Stage();
+        stage.setTitle("Gráficos Generados");
+
+        VBox contenedor = new VBox(10);
+        contenedor.setPadding(new Insets(15));
+        contenedor.setStyle("-fx-background-color: white;");
+
+        ScrollPane scrollPane = new ScrollPane(contenedor);
+        scrollPane.setFitToWidth(true);
+
+        for (File archivo : archivos) {
+            try {
+                Image imagen = new Image(archivo.toURI().toString());
+                ImageView imageView = new ImageView(imagen);
+                imageView.setPreserveRatio(true);
+                imageView.setFitWidth(900);
+
+                Label titulo = new Label("📊 " + archivo.getName());
+                titulo.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+
+                VBox bloqueImagen = new VBox(5, titulo, imageView);
+                bloqueImagen.setStyle("-fx-border-color: #cccccc; -fx-border-width: 1; -fx-padding: 10;");
+
+                contenedor. getChildren().add(bloqueImagen);
+            } catch (Exception e) {
+                System.err.println("Error al cargar imagen: " + archivo.getName());
+            }
+        }
+
+        Scene scene = new Scene(scrollPane, 950, 700);
+        stage.setScene(scene);
+        stage.show();
     }
 
     /**

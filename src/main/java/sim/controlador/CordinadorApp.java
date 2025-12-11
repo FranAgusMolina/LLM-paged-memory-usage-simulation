@@ -96,7 +96,7 @@ public class CordinadorApp {
         uiController. inyectarMemoryGrid(gridVisual);
 
         uiController.setOnIniciar(() -> simulador.iniciar());
-        uiController.setOnDetener(() -> simulador.detener());
+        uiController.setOnDetener(() -> simulador.pausar());
 
         String nombreCSV = auditador.getNombreArchivo();
         RScriptRunner rRunner = new RScriptRunner(nombreCSV);
