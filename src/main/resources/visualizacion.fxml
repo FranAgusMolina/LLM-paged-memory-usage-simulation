@@ -9,37 +9,59 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="720.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sim.controlador.ControladorUI">
+<BorderPane prefHeight="760.0" prefWidth="1150.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sim.controlador.ControladorUI">
 
     <top>
-        <Label text="Simulador PagedAttention - Arquitectura de Computadoras" BorderPane.alignment="CENTER">
-            <font>
-                <Font name="System Bold" size="18.0" />
-            </font>
+        <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: #333333;">
             <padding>
-                <Insets bottom="15.0" top="15.0" />
+                <Insets bottom="10.0" left="15.0" right="15.0" top="10.0" />
             </padding>
-        </Label>
+            <Label text="Simulador PagedAttention" textFill="WHITE">
+                <font>
+                    <Font name="System Bold" size="20.0" />
+                </font>
+            </Label>
+         <Label layoutX="25.0" layoutY="20.0" text="| Arquitectura de Computadoras" textFill="#b5b5b5">
+            <font>
+               <Font size="16.0" />
+            </font>
+         </Label>
+         <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+            <children>
+               <Button fx:id="btnAyuda" mnemonicParsing="false" onAction="#onBtnAyudaClick" style="-fx-background-color: #2196F3;" text="? Ayuda / Info" textFill="WHITE">
+                  <font>
+                     <Font name="System Bold" size="12.0" />
+                  </font>
+               </Button>
+            </children>
+         </HBox>
+        </HBox>
     </top>
 
     <left>
-        <VBox prefHeight="241.0" prefWidth="129.0" spacing="10.0" BorderPane.alignment="CENTER">
+        <VBox prefWidth="160.0" spacing="10.0" BorderPane.alignment="CENTER">
             <padding>
                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
             </padding>
 
-            <TitledPane collapsible="false" text="Control de Simulación">
-                <VBox spacing="10.0">
+            <TitledPane collapsible="false" text="Controles">
+                <VBox spacing="8.0">
                     <Button fx:id="btnIniciar" maxWidth="1.7976931348623157E308" onAction="#onBtnStartClick" text="▶ INICIAR" textFill="#009933">
                         <font><Font name="System Bold" size="12.0" /></font>
                     </Button>
-                    <Button fx:id="btnDetener" disable="true" maxWidth="1.7976931348623157E308" onAction="#onBtnStopClick" text="⏹ DETENER" textFill="#cc0000">
+                    <Button fx:id="btnDetener" disable="true" maxWidth="1.7976931348623157E308" onAction="#onBtnStopClick" text="⏸ PAUSAR" textFill="#cc7a00">
                         <font><Font name="System Bold" size="12.0" /></font>
                     </Button>
-                    <Button fx:id="btnReporte" disable="true" maxWidth="1.7976931348623157E308" onAction="#onBtnReporteClick" text="📊 Generar Reporte R" textFill="#000000">
+               <Button fx:id="btnReiniciar" layoutX="20.0" layoutY="55.0" maxWidth="1.7976931348623157E308" onAction="#onBtnResetClick" text="↺ REINICIAR" textFill="#1565c0">
+                  <font>
+                     <Font name="System Bold" size="12.0" />
+                  </font>
+               </Button>
+                    <Button fx:id="btnReporte" disable="true" maxWidth="1.7976931348623157E308" onAction="#onBtnReporteClick" text="📊 Generar Reporte" textFill="#000000">
                         <font><Font name="System Bold" size="12.0" /></font>
                     </Button>
                 </VBox>
@@ -62,39 +84,58 @@
     </left>
 
     <right>
-        <SplitPane orientation="VERTICAL" prefWidth="320.0" BorderPane.alignment="CENTER">
+        <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefWidth="340.0" BorderPane.alignment="CENTER">
 
             <VBox>
-                <Label text="Procesos Activos (Conversaciones)">
+                <Label style="-fx-background-color: #eaeaea;" text="Conversaciones Activas (Procesos)" maxWidth="Infinity">
                     <padding><Insets bottom="5.0" left="5.0" top="5.0" /></padding>
                     <font><Font name="System Bold" size="12.0" /></font>
                 </Label>
-                <TableView fx:id="tablaProcesos" prefHeight="214.0" prefWidth="278.0" VBox.vgrow="ALWAYS">
+                <TableView fx:id="tablaProcesos" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colPid" prefWidth="50.0" text="PID" />
-                        <TableColumn fx:id="colNombre" prefWidth="110.0" text="Usuario" />
-                        <TableColumn fx:id="colTokens" prefWidth="70.0" text="Tokens" />
-                        <TableColumn fx:id="colMarcos" prefWidth="70.0" text="Marcos" />
+                        <TableColumn fx:id="colPid" prefWidth="40.0" text="ID" />
+                        <TableColumn fx:id="colNombre" prefWidth="90.0" text="Usuario" />
+                        <TableColumn fx:id="colTokens" prefWidth="60.0" text="Tokens" />
+                        <TableColumn fx:id="colMarcos" prefWidth="60.0" text="Marcos" />
                     </columns>
                 </TableView>
             </VBox>
+         <VBox layoutX="10.0" layoutY="10.0">
+            <children>
+               <Label style="-fx-background-color: #eaeaea;" text="Contenido TLB (Caché de Direcciones)" maxWidth="Infinity">
+                  <padding>
+                     <Insets bottom="5.0" left="5.0" top="5.0" />
+                  </padding>
+                  <font>
+                     <Font name="System Bold" size="12.0" />
+                  </font>
+               </Label>
+               <TableView fx:id="tablaTLB" VBox.vgrow="ALWAYS">
+                  <columns>
+                     <TableColumn fx:id="colTLBKey" prefWidth="150.0" text="Clave (PID:Pagina)" />
+                     <TableColumn fx:id="colTLBFrame" prefWidth="100.0" text="Marco Físico" />
+                  </columns>
+               </TableView>
+            </children>
+         </VBox>
         </SplitPane>
     </right>
 
     <bottom>
-    </bottom>
-   <bottom>
         <VBox spacing="5.0" BorderPane.alignment="CENTER">
             <padding><Insets bottom="5.0" left="5.0" right="5.0" top="5.0" /></padding>
-            <Label text="Mapa de Marcos Físicos (DRAM) - [Verde: Libre | Color: Ocupado]" textFill="#666666" />
+            <Label text="Mapa de Marcos Físicos (DRAM) - [Gris: Libre | Color: Ocupado por Proceso | Naranja: Seleccionado]" textFill="#666666">
+            <font>
+               <Font name="System Italic" size="11.0" />
+            </font></Label>
 
-            <ScrollPane fx:id="scrollMemoria" fitToHeight="true" fitToWidth="true" prefHeight="662.0" prefWidth="1090.0" VBox.vgrow="ALWAYS" />
+            <ScrollPane fx:id="scrollMemoria" fitToHeight="true" fitToWidth="true" prefHeight="400.0" prefWidth="1090.0" VBox.vgrow="ALWAYS" />
         </VBox>
-   </bottom>
+    </bottom>
    <center>
 
          <VBox prefHeight="331.0" prefWidth="580.0" BorderPane.alignment="CENTER">
-             <Label text="Tabla de Páginas (Del proceso seleccionado)">
+             <Label style="-fx-background-color: #eaeaea;" text="Tabla de Páginas (Proceso Seleccionado)" maxWidth="Infinity">
                  <padding>
                <Insets bottom="5.0" left="5.0" top="5.0" />
             </padding>
