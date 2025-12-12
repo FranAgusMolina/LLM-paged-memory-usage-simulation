@@ -18,12 +18,27 @@ public class ReportViewer {
 
     /**
      * Muestra las imágenes generadas por el script en una nueva ventana.
+     * Las imágenes se eliminan automáticamente cuando el usuario cierra la ventana.
      *
      * @param archivos lista de archivos de imagen a mostrar
      */
     public void mostrarImagenesGeneradas(List<File> archivos) {
         Stage stage = new Stage();
         stage.setTitle("Gráficos Generados");
+
+        // Configurar evento de cierre para eliminar archivos temporales
+        stage.setOnCloseRequest(event -> {
+            for (File archivo : archivos) {
+                if (archivo.exists() && archivo.isFile()) {
+                    boolean eliminado = archivo.delete();
+                    if (eliminado) {
+                        System.out.println("Imagen temporal eliminada: " + archivo.getName());
+                    } else {
+                        System.err.println("No se pudo eliminar imagen: " + archivo.getName());
+                    }
+                }
+            }
+        });
 
         VBox contenedor = new VBox(10);
         contenedor.setPadding(new Insets(15));

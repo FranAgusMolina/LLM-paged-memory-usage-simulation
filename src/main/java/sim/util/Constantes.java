@@ -10,7 +10,7 @@ public class Constantes {
     public static final int TAMANIO_TLB = 16;
 
     // --- Configuración de Simulación ---
-    public static final int VELOCIDAD_SIMULACION_MS = 500; // Más rápido para ver acción
+    public static final int VELOCIDAD_SIMULACION_MS = 100; // Más rápido para ver acción
 
     // --- Colores Semánticos ---
     public static final String COLOR_LIBRE = "#E0E0E0";      // Gris

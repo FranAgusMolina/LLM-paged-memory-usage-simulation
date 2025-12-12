@@ -16,6 +16,7 @@ import java.util.List;
 public class RScriptRunner {
     private final String archivoCSV;
     private static final String CARPETA_SCRIPTS = "src/main/resources/scripts_r";
+    private static final String CARPETA_IMAGENES_TEMP = "src/main/resources/img/temp";
 
     /**
      * Crea un nuevo ejecutor de scripts de R.
@@ -24,6 +25,17 @@ public class RScriptRunner {
      */
     public RScriptRunner(String archivoCSV) {
         this.archivoCSV = archivoCSV;
+        crearDirectorioTemp();
+    }
+
+    /**
+     * Crea el directorio temporal para las imágenes si no existe.
+     */
+    private void crearDirectorioTemp() {
+        File dirTemp = new File(CARPETA_IMAGENES_TEMP);
+        if (!dirTemp.exists()) {
+            dirTemp.mkdirs();
+        }
     }
 
     /**
@@ -70,7 +82,8 @@ public class RScriptRunner {
                         "R no está instalado o Rscript no está en el PATH del sistema");
             }
 
-            ProcessBuilder pb = new ProcessBuilder("Rscript", rutaCompleta, archivoCSV);
+            // Pasar CSV y directorio de salida como argumentos
+            ProcessBuilder pb = new ProcessBuilder("Rscript", rutaCompleta, archivoCSV, CARPETA_IMAGENES_TEMP);
             pb.redirectErrorStream(true);
 
             Process proceso = pb.start();
@@ -163,12 +176,11 @@ public class RScriptRunner {
      */
     public List<File> obtenerArchivosGenerados(String nombreScript) {
         List<File> archivos = new ArrayList<>();
-        File directorioActual = new File(System.getProperty("user.dir"));
+        File directorioTemp = new File(CARPETA_IMAGENES_TEMP);
 
-        // Buscar archivos PNG y PDF recién creados
-        File[] posiblesArchivos = directorioActual.listFiles((dir, name) ->
-                (name.endsWith(".png") || name.endsWith(".pdf")) &&
-                        new File(dir, name).lastModified() > System.currentTimeMillis() - 10000 // últimos 10 segundos
+        // Buscar archivos PNG y PDF en la carpeta temporal
+        File[] posiblesArchivos = directorioTemp.listFiles((dir, name) ->
+                (name.endsWith(".png") || name.endsWith(".pdf"))
         );
 
         if (posiblesArchivos != null) {
@@ -176,5 +188,33 @@ public class RScriptRunner {
         }
 
         return archivos;
+    }
+
+    /**
+     * Limpia todos los archivos temporales generados (imágenes y reportes).
+     */
+    public void limpiarArchivosTemporales() {
+        File directorioTemp = new File(CARPETA_IMAGENES_TEMP);
+
+        if (directorioTemp.exists() && directorioTemp.isDirectory()) {
+            File[] archivos = directorioTemp.listFiles();
+            if (archivos != null) {
+                for (File archivo : archivos) {
+                    if (archivo.isFile()) {
+                        archivo.delete();
+                        System.out.println("Archivo temporal eliminado: " + archivo.getName());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Obtiene la ruta del directorio de imágenes temporales.
+     *
+     * @return ruta de la carpeta temporal
+     */
+    public String getCarpetaImagenesTemp() {
+        return CARPETA_IMAGENES_TEMP;
     }
 }

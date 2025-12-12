@@ -7,6 +7,8 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Clase responsable de auditar y registrar los datos de la simulación en un archivo CSV temporal.
@@ -16,6 +18,7 @@ public class Auditador {
     private PrintWriter writer;
     private String nombreArchivo;
     private static final String CARPETA_DATOS = "src/main/resources/datos";
+    private static final List<Auditador> instanciasActivas = new ArrayList<>();
 
     /**
      * Crea un nuevo auditor y prepara el archivo de registro temporal.
@@ -23,6 +26,9 @@ public class Auditador {
     public Auditador() {
         this.nombreArchivo = obtenerNombreArchivo();
         inicializarArchivo();
+        synchronized (instanciasActivas) {
+            instanciasActivas.add(this);
+        }
     }
 
     /**
@@ -85,6 +91,66 @@ public class Auditador {
     public void cerrar() {
         if (writer != null) {
             writer.close();
+            writer = null;
+            synchronized (instanciasActivas) {
+                instanciasActivas.remove(this);
+            }
+            File archivo = new File(nombreArchivo);
+            if (archivo.exists()) {
+                archivo.delete();
+            }
+        }
+    }
+
+    /**
+     * Cierra todos los auditadores activos antes de limpiar archivos.
+     */
+    public static void cerrarTodosLosAuditadores() {
+        synchronized (instanciasActivas) {
+            List<Auditador> copia = new ArrayList<>(instanciasActivas);
+            for (Auditador auditador : copia) {
+                if (auditador.writer != null) {
+                    auditador.writer.close();
+                    auditador.writer = null;
+                    System.out.println("Auditador cerrado: " + auditador.nombreArchivo);
+                }
+            }
+            instanciasActivas.clear();
+        }
+    }
+
+    /**
+     * Limpia todos los archivos CSV temporales de la carpeta de datos.
+     * IMPORTANTE: Llama a cerrarTodosLosAuditadores() primero para cerrar archivos abiertos.
+     */
+    public static void limpiarArchivosTemporales() {
+        // Primero cerrar todos los archivos abiertos
+        cerrarTodosLosAuditadores();
+
+        // Pequeña pausa para asegurar que el SO libere los handles de archivo
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // Ahora sí eliminar los archivos
+        File carpetaDatos = new File(CARPETA_DATOS);
+
+        if (carpetaDatos.exists() && carpetaDatos.isDirectory()) {
+            File[] archivos = carpetaDatos.listFiles((dir, name) -> name.endsWith(".csv"));
+            if (archivos != null) {
+                for (File archivo : archivos) {
+                    if (archivo.isFile()) {
+                        boolean eliminado = archivo.delete();
+                        if (eliminado) {
+                            System.out.println("Archivo de datos eliminado: " + archivo.getName());
+                        } else {
+                            System.err.println("No se pudo eliminar: " + archivo.getName());
+                        }
+                    }
+                }
+            }
         }
     }
 

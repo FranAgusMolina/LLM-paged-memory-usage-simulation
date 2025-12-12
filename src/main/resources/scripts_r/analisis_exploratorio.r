@@ -2,11 +2,13 @@
 # Opción 4: Análisis de Punto de Saturación
 
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) == 0) {
+if (length(args) < 1) {
   stop("Error: No se proporcionó archivo CSV")
 }
 
 archivo_csv <- args[1]
+directorio_salida <- if (length(args) >= 2) args[2] else "."
+
 datos <- read.csv(archivo_csv)
 
 cat("=== REPORTE DE ANÁLISIS ESTADÍSTICO ===\n")
@@ -46,7 +48,7 @@ if (! is.na(punto_saturacion)) {
 }
 
 # Generar gráfico de saturación
-nombre_grafico <- "analisis_saturacion. png"
+nombre_grafico <- file.path(directorio_salida, "analisis_saturacion.png")
 png(nombre_grafico, width=1200, height=800, res=120)
 
 par(mfrow=c(2,2), mar=c(4,4,3,2))
