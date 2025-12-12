@@ -86,7 +86,7 @@ public class CordinadorApp {
     /**
      * Conecta los eventos de la UI con la lógica de simulación:
      * - Inyecta el grid visual de memoria
-     * - Configura callbacks de botones (iniciar/detener)
+     * - Configura callbacks de botones (iniciar/detener/reiniciar)
      * - Configura sistema de reportes con R
      * - Establece listeners para actualización automática
      * - Configura resaltado visual al seleccionar procesos
@@ -97,6 +97,7 @@ public class CordinadorApp {
 
         uiController.setOnIniciar(() -> simulador.iniciar());
         uiController.setOnDetener(() -> simulador.pausar());
+        uiController.setOnReiniciar(this::reiniciarAplicacion);
 
         String nombreCSV = auditador.getNombreArchivo();
         RScriptRunner rRunner = new RScriptRunner(nombreCSV);
@@ -134,6 +135,7 @@ public class CordinadorApp {
         }
 
         uiController.actualizarEstadisticas(mmu.getTlb().getHits(), mmu.getTlb().getMisses());
+        uiController.actualizarTablaTLB(mmu.getTlb().getCache());
         refrescarVistaVisual();
     }
 
@@ -185,5 +187,50 @@ public class CordinadorApp {
      */
     private void inicializarRecorder(){
         this.auditador = new Auditador();
+    }
+
+    /**
+     * Reinicia completamente la aplicación:
+     * - Detiene y limpia la simulación actual
+     * - Limpia archivos temporales (datos e imágenes)
+     * - Reinicia todos los componentes
+     * - Refresca la interfaz gráfica
+     */
+    public void reiniciarAplicacion() {
+        System.out.println("=== INICIANDO REINICIO COMPLETO ===");
+
+        // 1. Detener y limpiar simulación
+        simulador.reiniciar();
+
+        // 2. Limpiar archivos temporales
+        Auditador.limpiarArchivosTemporales();
+        RScriptRunner tempRunner = new RScriptRunner("dummy");
+        tempRunner.limpiarArchivosTemporales();
+
+        // 3. Reiniciar componentes
+        inicializarNegocio();
+        inicializarRecorder();
+
+        // 4. Crear nuevo simulador
+        this.simulador = new SimulationManager(ram, mmu, auditador);
+
+        // 5. Reconectar UI (mantener callbacks)
+        simulador.setOnUpdate(() -> Platform.runLater(this::sincronizarSimulacion));
+
+        // 6. Actualizar RScriptRunner con nuevo CSV
+        String nombreCSV = auditador.getNombreArchivo();
+        RScriptRunner rRunner = new RScriptRunner(nombreCSV);
+        uiController.setRScriptRunner(rRunner);
+
+        // 7. Refrescar visualización completa
+        Platform.runLater(() -> {
+            uiController.actualizarListaProcesos(simulador.getProcesosActivos());
+            uiController.actualizarEstadisticas(0, 0);
+            uiController.actualizarTablaTLB(Collections.emptyMap());
+            uiController.mostrarTablaPaginas(Collections.emptyMap());
+            refrescarVistaVisual();
+        });
+
+        System.out.println("=== REINICIO COMPLETO FINALIZADO ===");
     }
 }

@@ -20,6 +20,8 @@ public class ControladorUI {
     @FXML private Button btnIniciar;
     @FXML private Button btnDetener;
     @FXML private Button btnReporte;
+    @FXML private Button btnReiniciar;
+    @FXML private Button btnAyuda;
     @FXML private ScrollPane scrollMemoria;
 
     @FXML private Label lblHits;
@@ -36,9 +38,14 @@ public class ControladorUI {
     @FXML private TableColumn<Map.Entry<Integer, Integer>, Integer> colPaginaVirtual;
     @FXML private TableColumn<Map.Entry<Integer, Integer>, Integer> colMarcoFisico;
 
+    @FXML private TableView<Map.Entry<String, Integer>> tablaTLB;
+    @FXML private TableColumn<Map.Entry<String, Integer>, String> colTLBKey;
+    @FXML private TableColumn<Map.Entry<String, Integer>, Integer> colTLBFrame;
+
     private MemoryGrid memoryGrid;
     private Runnable onIniciarAction;
     private Runnable onDetenerAction;
+    private Runnable onReiniciarAction;
     private ReportController reporController;
 
     /**
@@ -48,6 +55,7 @@ public class ControladorUI {
     public void initialize() {
         configurarTablaProcesos();
         configurarTablaPaginas();
+        configurarTablaTLB();
     }
 
     /**
@@ -75,6 +83,16 @@ public class ControladorUI {
     }
 
     /**
+     * Configura el binding de la tabla TLB.
+     */
+    private void configurarTablaTLB() {
+        colTLBKey.setCellValueFactory(cell ->
+                new SimpleStringProperty(cell.getValue().getKey()));
+        colTLBFrame.setCellValueFactory(cell ->
+                new SimpleIntegerProperty(cell.getValue().getValue()).asObject());
+    }
+
+    /**
      * Establece la acción del botón Iniciar.
      *
      * @param action callback de inicio
@@ -90,6 +108,15 @@ public class ControladorUI {
      */
     public void setOnDetener(Runnable action) {
         this.onDetenerAction = action;
+    }
+
+    /**
+     * Establece la acción del botón Reiniciar.
+     *
+     * @param action callback de reinicio
+     */
+    public void setOnReiniciar(Runnable action) {
+        this.onReiniciarAction = action;
     }
 
     /**
@@ -169,6 +196,18 @@ public class ControladorUI {
     }
 
     /**
+     * Actualiza el contenido de la tabla TLB con las entradas del cache.
+     *
+     * @param cacheTLB mapa con las entradas de la TLB (clave: "PID:Pagina", valor: marco físico)
+     */
+    public void actualizarTablaTLB(Map<String, Integer> cacheTLB) {
+        if (tablaTLB != null) {
+            tablaTLB.getItems().clear();
+            tablaTLB.getItems().addAll(cacheTLB.entrySet());
+        }
+    }
+
+    /**
      * Obtiene la referencia a la tabla de procesos.
      *
      * @return tabla de procesos
@@ -201,6 +240,73 @@ public class ControladorUI {
             btnDetener.setDisable(true);
             btnReporte.setDisable(false);
         }
+    }
+
+    /**
+     * Maneja el clic en el boton Reiniciar
+     */
+    @FXML
+    private void onBtnReiniciarClick() {
+        if (onReiniciarAction != null) {
+            onReiniciarAction.run();
+            btnIniciar.setDisable(false);
+            btnDetener.setDisable(true);
+            btnReporte.setDisable(true);
+        }
+    }
+
+    /**
+     * Alias para onBtnReiniciarClick (usado en el nuevo FXML)
+     */
+    @FXML
+    private void onBtnResetClick() {
+        onBtnReiniciarClick();
+    }
+
+    /**
+     * Maneja el clic en el botón de Ayuda.
+     * Muestra información sobre la simulación y cómo usarla.
+     */
+    @FXML
+    private void onBtnAyudaClick() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Ayuda - Simulador PagedAttention");
+        alert.setHeaderText("Información del Simulador");
+
+        String contenido = """
+                📚 SOBRE LA SIMULACIÓN:
+                Este simulador demuestra el funcionamiento de la memoria paginada con TLB (Translation Lookaside Buffer).
+                Simula múltiples procesos LLM (conversaciones) compitiendo por memoria RAM.
+                
+                🎮 CONTROLES:
+                • ▶ INICIAR: Comienza/reanuda la simulación
+                • ⏸ PAUSAR: Pausa la simulación temporalmente
+                • ↺ REINICIAR: Resetea todo a estado inicial
+                • 📊 Generar Reporte: Crea análisis estadísticos con R
+                
+                📊 VISUALIZACIÓN:
+                • Grid de Memoria: Muestra marcos físicos (gris=libre, color=ocupado)
+                • Conversaciones Activas: Lista de procesos en ejecución
+                • Tabla de Páginas: Mapeo virtual→físico del proceso seleccionado
+                • Contenido TLB: Cache de traducciones de direcciones
+                
+                📈 MÉTRICAS TLB:
+                • Hits: Traducciones encontradas en cache (rápido)
+                • Misses: Traducciones no encontradas (lento, consulta RAM)
+                • Hit Rate: Porcentaje de eficiencia de la TLB
+                
+                💡 CONCEPTOS:
+                • Paginación: División de memoria en bloques de tamaño fijo
+                • TLB: Cache pequeña y rápida para traducciones frecuentes
+                • Page Fault: Cuando una página no está en memoria
+                • PagedAttention: Técnica de optimización para LLMs
+                
+                👥 Arquitectura de Computadoras - 2025
+                """;
+
+        alert.setContentText(contenido);
+        alert.getDialogPane().setPrefWidth(600);
+        alert.showAndWait();
     }
 
     /**

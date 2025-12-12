@@ -103,6 +103,32 @@ public class SimulationManager implements Runnable{
     }
 
     /**
+     * Reinicia completamente la simulación, limpiando todos los recursos.
+     * Resetea memoria, TLB, procesos activos y ciclos.
+     */
+    public void reiniciar() {
+        // Primero detener la simulación si está corriendo
+        detener();
+
+        // Esperar a que el hilo termine
+        if (simulationThread != null) {
+            try {
+                simulationThread.join(1000); // Esperar máximo 1 segundo
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        // Limpiar todos los recursos
+        procesosActivos.clear();
+        mmu.getTlb().limpiar();
+        ram.limpiar();
+        ciclo = 0;
+
+        System.out.println("SIMULACIÓN: Reiniciada completamente. Todos los recursos limpiados.");
+    }
+
+    /**
      * Establece un callback que se ejecuta tras cada ciclo de simulación.
      *
      * @param callback función a ejecutar en cada actualización

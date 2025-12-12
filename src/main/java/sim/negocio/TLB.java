@@ -121,4 +121,14 @@ public class TLB {
     private String generarClave(int pid, int paginaVirtual) {
         return pid + ":" + paginaVirtual;
     }
+
+    /**
+     * Limpia completamente la TLB, borrando toda la cache y reseteando estadísticas.
+     */
+    public void limpiar() {
+        cache.clear();
+        hits = 0;
+        misses = 0;
+        System.out.println("TLB limpiada completamente.");
+    }
 }

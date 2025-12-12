@@ -74,6 +74,17 @@ public class PhysicalMemory {
     }
 
     /**
+     * Limpia toda la memoria física, liberando todos los marcos.
+     * Resetea cada marco a su estado inicial.
+     */
+    public void limpiar() {
+        for (Frame frame : frames) {
+            frame.liberar();
+        }
+        System.out.println("Memoria física limpiada completamente.");
+    }
+
+    /**
      * Calcula la cantidad de marcos ocupados en la memoria física.
      *
      * @return número de marcos ocupados
