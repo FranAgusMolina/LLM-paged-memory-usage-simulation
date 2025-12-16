@@ -141,8 +141,8 @@ public class CordinadorApp {
 
     /**
      * Actualiza la visualización de la memoria física aplicando colores según el estado:
-     * - Gris:  marcos libres
-     * - Azul: marcos ocupados por otros procesos
+     * - blanco:  marcos libres
+     * - gris: marcos ocupados por otros procesos
      * - Naranja: marcos del proceso seleccionado (resaltado)
      * También actualiza la tabla de páginas del proceso seleccionado.
      */

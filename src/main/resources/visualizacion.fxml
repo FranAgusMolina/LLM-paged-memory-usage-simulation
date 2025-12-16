@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="760.0" prefWidth="1150.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sim.controlador.ControladorUI">
+<BorderPane prefHeight="760.0" prefWidth="1150.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sim.controlador.ControladorUI">
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: #333333;">
@@ -87,7 +87,7 @@
         <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefWidth="340.0" BorderPane.alignment="CENTER">
 
             <VBox>
-                <Label style="-fx-background-color: #eaeaea;" text="Conversaciones Activas (Procesos)" maxWidth="Infinity">
+                <Label maxWidth="Infinity" style="-fx-background-color: #eaeaea;" text="Conversaciones Activas (Procesos)">
                     <padding><Insets bottom="5.0" left="5.0" top="5.0" /></padding>
                     <font><Font name="System Bold" size="12.0" /></font>
                 </Label>
@@ -102,7 +102,7 @@
             </VBox>
          <VBox layoutX="10.0" layoutY="10.0">
             <children>
-               <Label style="-fx-background-color: #eaeaea;" text="Contenido TLB (Caché de Direcciones)" maxWidth="Infinity">
+               <Label maxWidth="Infinity" style="-fx-background-color: #eaeaea;" text="Contenido TLB (Caché de Direcciones)">
                   <padding>
                      <Insets bottom="5.0" left="5.0" top="5.0" />
                   </padding>
@@ -110,10 +110,11 @@
                      <Font name="System Bold" size="12.0" />
                   </font>
                </Label>
-               <TableView fx:id="tablaTLB" VBox.vgrow="ALWAYS">
+               <TableView fx:id="tablaTLB" prefHeight="121.0" prefWidth="381.0" VBox.vgrow="ALWAYS">
                   <columns>
-                     <TableColumn fx:id="colTLBKey" prefWidth="150.0" text="Clave (PID:Pagina)" />
-                     <TableColumn fx:id="colTLBFrame" prefWidth="100.0" text="Marco Físico" />
+                     <TableColumn fx:id="colTLBPID" prefWidth="60.0" text="PID" />
+                     <TableColumn fx:id="colTLBPagina" prefWidth="100.0" text="Página" />
+                     <TableColumn fx:id="colTLBMarcoFisico" prefWidth="210.0" text="Marco Físico" />
                   </columns>
                </TableView>
             </children>
@@ -135,7 +136,7 @@
    <center>
 
          <VBox prefHeight="331.0" prefWidth="580.0" BorderPane.alignment="CENTER">
-             <Label style="-fx-background-color: #eaeaea;" text="Tabla de Páginas (Proceso Seleccionado)" maxWidth="Infinity">
+             <Label maxWidth="Infinity" style="-fx-background-color: #eaeaea;" text="Tabla de Páginas (Proceso Seleccionado)">
                  <padding>
                <Insets bottom="5.0" left="5.0" top="5.0" />
             </padding>

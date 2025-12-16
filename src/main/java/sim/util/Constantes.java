@@ -2,12 +2,12 @@ package sim.util;
 
 public class Constantes {
     // --- Configuración de Hardware ---
-    public static final int COLUMNAS_GRILLA = 32;
-    public static final int FILAS_GRILLA = 32;
+    public static final int COLUMNAS_GRILLA = 46;
+    public static final int FILAS_GRILLA = 18;
     public static final int TOTAL_MARCOS_RAM = COLUMNAS_GRILLA * FILAS_GRILLA; // 512
 
-    public static final int TAMANIO_PAGINA = 16;
-    public static final int TAMANIO_TLB = 16;
+    public static final int TAMANIO_PAGINA = 64;
+    public static final int TAMANIO_TLB = 32;
 
     // --- Configuración de Simulación ---
     public static final int VELOCIDAD_SIMULACION_MS = 100; // Más rápido para ver acción

@@ -39,8 +39,11 @@ public class ControladorUI {
     @FXML private TableColumn<Map.Entry<Integer, Integer>, Integer> colMarcoFisico;
 
     @FXML private TableView<Map.Entry<String, Integer>> tablaTLB;
-    @FXML private TableColumn<Map.Entry<String, Integer>, String> colTLBKey;
-    @FXML private TableColumn<Map.Entry<String, Integer>, Integer> colTLBFrame;
+    @FXML private TableColumn<Map.Entry<String, Integer>, String> colTLBPID;
+    @FXML private TableColumn<Map.Entry<String, Integer>, Integer> colTLBPagina;
+    @FXML private TableColumn<Map.Entry<String, Integer>, Integer> colTLBMarcoFisico;
+
+
 
     private MemoryGrid memoryGrid;
     private Runnable onIniciarAction;
@@ -86,9 +89,18 @@ public class ControladorUI {
      * Configura el binding de la tabla TLB.
      */
     private void configurarTablaTLB() {
-        colTLBKey.setCellValueFactory(cell ->
-                new SimpleStringProperty(cell.getValue().getKey()));
-        colTLBFrame.setCellValueFactory(cell ->
+        colTLBPID.setCellValueFactory(cell -> {
+            String[] parts = cell.getValue().getKey().split(":");
+            return new SimpleStringProperty(parts.length > 0 ? parts[0] : "?");
+        });
+
+        colTLBPagina.setCellValueFactory(cell -> {
+            String[] parts = cell.getValue().getKey().split(":");
+            int pagina = parts.length > 1 ? Integer.parseInt(parts[1]) : -1;
+            return new SimpleIntegerProperty(pagina).asObject();
+        });
+
+        colTLBMarcoFisico.setCellValueFactory(cell ->
                 new SimpleIntegerProperty(cell.getValue().getValue()).asObject());
     }
 
