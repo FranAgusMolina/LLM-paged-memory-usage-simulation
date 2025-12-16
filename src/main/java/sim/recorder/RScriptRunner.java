@@ -96,7 +96,6 @@ public class RScriptRunner {
             String linea;
             while ((linea = reader.readLine()) != null) {
                 salida. append(linea).append("\n");
-                System.out.println("[R] " + linea);
             }
 
             int exitCode = proceso.waitFor();
