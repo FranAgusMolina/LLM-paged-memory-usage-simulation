@@ -10,6 +10,7 @@ import sim.modelo.LLMProcess;
 import sim.recorder.RScriptRunner;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Controlador principal de la interfaz gráfica JavaFX.
@@ -22,6 +23,7 @@ public class ControladorUI {
     @FXML private Button btnReporte;
     @FXML private Button btnReiniciar;
     @FXML private Button btnAyuda;
+    @FXML private Button btnConfig;
     @FXML private ScrollPane scrollMemoria;
 
     @FXML private Label lblHits;
@@ -49,6 +51,7 @@ public class ControladorUI {
     private Runnable onIniciarAction;
     private Runnable onDetenerAction;
     private Runnable onReiniciarAction;
+    private Consumer<String> onAplicarConfigAction;
     private ReportController reporController;
 
     /**
@@ -129,6 +132,15 @@ public class ControladorUI {
      */
     public void setOnReiniciar(Runnable action) {
         this.onReiniciarAction = action;
+    }
+
+    /**
+     * Establece la acción que se ejecutará cuando se aplique una configuración.
+     *
+     * @param action callback que recibe el nombre del perfil seleccionado
+     */
+    public void setOnAplicarConfig(java.util.function.Consumer<String> action) {
+        this.onAplicarConfigAction = action;
     }
 
     /**
@@ -328,6 +340,46 @@ public class ControladorUI {
     private void onBtnReporteClick() {
         if (reporController != null) {
             reporController.generarReporte();
+        }
+    }
+
+    /**
+     * Maneja el clic en el botón de Configuración.
+     * Abre una ventana modal con los ajustes de la simulación.
+     */
+    @FXML
+    private void onBtnConfigClick() {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                    getClass().getResource("/configuracion.fxml")
+            );
+            javafx.scene.Parent root = loader.load();
+
+            // Obtener el controlador de configuración
+            ControladorConfig configController = loader.getController();
+
+            // Configurar callback: cuando se aplique, notificar al coordinador
+            configController.setOnAplicar(() -> {
+                String perfilSeleccionado = configController.getPerfilSeleccionado();
+                if (onAplicarConfigAction != null) {
+                    onAplicarConfigAction.accept(perfilSeleccionado);
+                }
+            });
+
+            javafx.stage.Stage configStage = new javafx.stage.Stage();
+            configStage.setTitle("Configuración de la Simulación");
+            configStage.setScene(new javafx.scene.Scene(root));
+            configStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            configStage.setResizable(false);
+            configStage.showAndWait();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No se pudo abrir la ventana de configuración");
+            alert.setContentText("Error: " + e.getClass().getSimpleName() + "\n" + e.getMessage());
+            alert.showAndWait();
         }
     }
 }

@@ -1,0 +1,31 @@
+# Archivo de configuración de perfiles de simulación
+# Formato:
+# [NombrePerfil]
+# columnas=valor
+# filas=valor
+# tamPagina=valor
+# tamTlb=valor
+# velocidad=valor
+
+[Servidor Estándar (ChatGPT)]
+columnas=46
+filas=18
+tamPagina=64
+tamTlb=32
+velocidad=100
+
+[Cluster Alto Rendimiento (H100)]
+columnas=64
+filas=32
+tamPagina=256
+tamTlb=128
+velocidad=50
+
+[Edge AI / Dispositivo Móvil]
+columnas=16
+filas=16
+tamPagina=16
+tamTlb=4
+velocidad=200
+
+

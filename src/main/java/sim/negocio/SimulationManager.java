@@ -1,9 +1,10 @@
 package sim.negocio;
 
 import sim.modelo.LLMProcess;
+import sim.modelo.Perfil;
 import sim.modelo.PhysicalMemory;
 import sim.recorder.Auditador;
-import sim.util.Constantes;
+import sim.datos.Constantes;
 
 import java.util. List;
 import java.util. Random;
@@ -25,6 +26,7 @@ public class SimulationManager implements Runnable{
     private Runnable onUpdateCallback;
     private Thread simulationThread;
     private int ciclo = 0;
+    private Perfil perfil;
 
     /**
      * Crea un nuevo SimulationManager con los componentes principales.
@@ -33,11 +35,12 @@ public class SimulationManager implements Runnable{
      * @param mmu servicio de gestión de memoria
      * @param auditar auditor para registrar eventos de la simulación
      */
-    public SimulationManager(PhysicalMemory ram, MMUService mmu, Auditador auditar) {
+    public SimulationManager(PhysicalMemory ram, MMUService mmu, Auditador auditar, Perfil perfil) {
         this.ram = ram;
         this.mmu = mmu;
         this.auditador = auditar;
         this.procesosActivos = new CopyOnWriteArrayList<>();
+        this.perfil = perfil;
     }
 
     /**
@@ -181,7 +184,7 @@ public class SimulationManager implements Runnable{
                 }
 
                 ciclo++;
-                Thread.sleep(Constantes.VELOCIDAD_SIMULACION_MS);
+                Thread.sleep(perfil.getSimSpeed());
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

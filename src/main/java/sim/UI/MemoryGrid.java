@@ -4,7 +4,8 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import sim.util.Constantes;
+import sim.datos.Constantes;
+import sim.modelo.Perfil;
 
 /**
  * Componente visual que representa la memoria física como una grilla de bloques.
@@ -12,16 +13,18 @@ import sim.util.Constantes;
  */
 public class MemoryGrid extends GridPane {
     private Rectangle[] bloquesVisuales;
-
+    private Perfil perfil;
     /**
      * Crea una nueva grilla de memoria con la cantidad de marcos especificada.
      *
      * @param totalMarcos cantidad total de marcos físicos a mostrar
+     * @param perfil
      */
-    public MemoryGrid(int totalMarcos) {
+    public MemoryGrid(int totalMarcos, Perfil perfil) {
         this.setHgap(2);
         this.setVgap(2);
         this.setStyle("-fx-background-color: #2b2b2b; -fx-padding: 10;");
+        this.perfil = perfil;
 
         inicializarGrilla(totalMarcos);
     }
@@ -33,7 +36,7 @@ public class MemoryGrid extends GridPane {
      */
     private void inicializarGrilla(int total) {
         bloquesVisuales = new Rectangle[total];
-        int columnas = Constantes.COLUMNAS_GRILLA;
+        int columnas = perfil.getColGrilla();
 
         for (int i = 0; i < total; i++) {
             Rectangle rect = new Rectangle(18, 18);

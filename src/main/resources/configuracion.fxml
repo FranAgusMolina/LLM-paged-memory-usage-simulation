@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="350.0" prefWidth="450.0" spacing="15.0" style="-fx-background-color: #f5f5f5;" xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sim.controlador.ControladorConfig">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <!-- Encabezado -->
+    <Label text="⚙ Configuración de la Simulación" textFill="#333333">
+        <font>
+            <Font name="System Bold" size="18.0" />
+        </font>
+    </Label>
+
+    <Separator />
+
+    <!-- Sección: Parámetros de Configuración -->
+    <Label text="📦 Parámetros de Configuración" textFill="#555555">
+        <font>
+            <Font name="System Bold" size="14.0" />
+        </font>
+    </Label>
+
+    <GridPane hgap="10.0" vgap="15.0">
+        <Label text="Perfil de Simulación:" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font>
+        </Label>
+        <ComboBox fx:id="comboPerfil" prefWidth="250.0" promptText="Selecciona un perfil..." GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+        <Label text="Tamaño TLB (filas):" GridPane.columnIndex="0" GridPane.rowIndex="1">
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font>
+        </Label>
+        <Spinner fx:id="spinnerTamanioTLB" editable="true" prefWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+        <Label text="Tamaño Marco de Página (tokens):" GridPane.columnIndex="0" GridPane.rowIndex="2">
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font>
+        </Label>
+        <Spinner fx:id="spinnerTamanioMarco" editable="true" prefWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+    </GridPane>
+
+    <!-- Espaciador para empujar botones al fondo -->
+    <VBox VBox.vgrow="ALWAYS" />
+
+    <Separator />
+
+    <!-- Botones de acción -->
+    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+        <Button fx:id="btnAplicar" onAction="#onBtnAplicarClick" style="-fx-background-color: #4CAF50;" text="✓ Aplicar" textFill="WHITE">
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font>
+        </Button>
+        <Button fx:id="btnCancelar" onAction="#onBtnCancelarClick" style="-fx-background-color: #f44336;" text="✖ Cancelar" textFill="WHITE">
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font>
+        </Button>
+    </HBox>
+</VBox>
+

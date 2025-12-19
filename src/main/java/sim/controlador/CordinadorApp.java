@@ -6,16 +6,20 @@ import javafx.scene.Parent;
 import javafx.scene. Scene;
 import javafx.scene.paint.Color;
 import javafx. stage.Stage;
+import sim.UI.MemoryGrid;
+import sim.datos.CargarPerfiles;
 import sim. modelo.Frame;
 import sim.modelo.LLMProcess;
+import sim.modelo.Perfil;
 import sim. modelo.PhysicalMemory;
 import sim.negocio.MMUService;
 import sim.negocio.SimulationManager;
 import sim.recorder. Auditador;
 import sim.recorder.RScriptRunner;
-import sim.util.Constantes;
+import sim.datos.Constantes;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 
 /**
  * Coordinador principal de la aplicación que integra la interfaz gráfica
@@ -31,6 +35,9 @@ public class CordinadorApp {
     private MMUService mmu;
 
     private Auditador auditador;
+
+    private LinkedHashMap<String, Perfil> perfiles;
+    private Perfil perfil;
 
     /**
      * Crea un nuevo coordinador de aplicación.
@@ -50,6 +57,7 @@ public class CordinadorApp {
      * - Conexiones entre lógica y UI
      */
     public void iniciarAplicacion() {
+        inicializarPerfiles("Servidor Estándar (ChatGPT)");
         inicializarNegocio();
         inicializarRecorder();
         inicializarSimulacion();
@@ -73,14 +81,30 @@ public class CordinadorApp {
         }
     }
 
+    private void inicializarPerfiles(String perfilSeleccionado) {
+        // Cargar perfiles solo la primera vez (singleton)
+        if (perfiles == null) {
+            perfiles = CargarPerfiles.cargar();
+        }
+
+        // Validar que el perfil seleccionado exista
+        if (perfilSeleccionado != null && perfiles.containsKey(perfilSeleccionado)) {
+            perfil = perfiles.get(perfilSeleccionado);
+        } else {
+            // Usar el primer perfil disponible como fallback
+            perfil = perfiles.values().iterator().next();
+            System.out.println("⚠️ Perfil '" + perfilSeleccionado + "' no encontrado. Usando: " + perfil.getNombre());
+        }
+    }
+
     /**
      * Inicializa los componentes de negocio principales:
      * - Memoria física (RAM)
      * - Unidad de gestión de memoria (MMU) con TLB
      */
     private void inicializarNegocio() {
-        this.ram = new PhysicalMemory(Constantes. TOTAL_MARCOS_RAM);
-        this.mmu = new MMUService(ram, Constantes.TAMANIO_TLB, Constantes.TAMANIO_PAGINA);
+        this.ram = new PhysicalMemory(perfil.getTotalMarcosRam());
+        this.mmu = new MMUService(ram, perfil.getTLBSize(), perfil.getPageSize());
     }
 
     /**
@@ -92,12 +116,13 @@ public class CordinadorApp {
      * - Configura resaltado visual al seleccionar procesos
      */
     private void conectarLogicaConUI() {
-        sim.UI.MemoryGrid gridVisual = new sim.UI.MemoryGrid(ram. getSize());
-        uiController. inyectarMemoryGrid(gridVisual);
+        MemoryGrid gridVisual = new MemoryGrid(ram.getSize(), perfil);
+        uiController.inyectarMemoryGrid(gridVisual);
 
         uiController.setOnIniciar(() -> simulador.iniciar());
         uiController.setOnDetener(() -> simulador.pausar());
         uiController.setOnReiniciar(this::reiniciarAplicacion);
+        uiController.setOnAplicarConfig(this::reiniciarConPerfil);
 
         String nombreCSV = auditador.getNombreArchivo();
         RScriptRunner rRunner = new RScriptRunner(nombreCSV);
@@ -178,7 +203,7 @@ public class CordinadorApp {
      * y el sistema de auditoría.
      */
     private void inicializarSimulacion(){
-        this.simulador = new SimulationManager(ram, mmu, auditador);
+        this.simulador = new SimulationManager(ram, mmu, auditador, perfil);
     }
 
     /**
@@ -212,7 +237,7 @@ public class CordinadorApp {
         inicializarRecorder();
 
         // 4. Crear nuevo simulador
-        this.simulador = new SimulationManager(ram, mmu, auditador);
+        this.simulador = new SimulationManager(ram, mmu, auditador, perfil);
 
         // 5. Reconectar UI (mantener callbacks)
         simulador.setOnUpdate(() -> Platform.runLater(this::sincronizarSimulacion));
@@ -233,4 +258,56 @@ public class CordinadorApp {
 
         System.out.println("=== REINICIO COMPLETO FINALIZADO ===");
     }
+
+    /**
+     * Reinicia la aplicación con un perfil diferente.
+     * Carga el nuevo perfil y reinicia todos los componentes con la nueva configuración.
+     *
+     * @param nombrePerfil nombre del perfil a cargar
+     */
+    public void reiniciarConPerfil(String nombrePerfil) {
+        System.out.println("=== REINICIANDO CON PERFIL: " + nombrePerfil + " ===");
+
+        // 1. Detener simulación actual
+        simulador.reiniciar();
+
+        // 2. Limpiar archivos temporales
+        Auditador.limpiarArchivosTemporales();
+        RScriptRunner tempRunner = new RScriptRunner("dummy");
+        tempRunner.limpiarArchivosTemporales();
+
+        // 3. Cargar nuevo perfil
+        inicializarPerfiles(nombrePerfil);
+
+        // 4. Reiniciar componentes con nueva configuración
+        inicializarNegocio();
+        inicializarRecorder();
+
+        // 5. Crear nuevo simulador
+        this.simulador = new SimulationManager(ram, mmu, auditador, perfil);
+
+        // 6. Recrear grilla visual con nuevo tamaño
+        MemoryGrid nuevaGrilla = new MemoryGrid(ram.getSize(), perfil);
+        uiController.inyectarMemoryGrid(nuevaGrilla);
+
+        // 7. Reconectar callbacks
+        simulador.setOnUpdate(() -> Platform.runLater(this::sincronizarSimulacion));
+
+        // 8. Actualizar RScriptRunner con nuevo CSV
+        String nombreCSV = auditador.getNombreArchivo();
+        RScriptRunner rRunner = new RScriptRunner(nombreCSV);
+        uiController.setRScriptRunner(rRunner);
+
+        // 9. Refrescar visualización completa
+        Platform.runLater(() -> {
+            uiController.actualizarListaProcesos(simulador.getProcesosActivos());
+            uiController.actualizarEstadisticas(0, 0);
+            uiController.actualizarTablaTLB(Collections.emptyMap());
+            uiController.mostrarTablaPaginas(Collections.emptyMap());
+            refrescarVistaVisual();
+        });
+
+        System.out.println("=== REINICIO CON NUEVO PERFIL FINALIZADO ===");
+    }
+
 }
