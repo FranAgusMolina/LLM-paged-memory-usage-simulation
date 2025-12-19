@@ -143,8 +143,9 @@
         </VBox>
     </bottom>
    <center>
-
-         <VBox prefHeight="331.0" prefWidth="580.0" BorderPane.alignment="CENTER">
+      <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" BorderPane.alignment="CENTER">
+        <items>
+         <VBox prefHeight="331.0" prefWidth="580.0">
              <Label maxWidth="Infinity" style="-fx-background-color: #eaeaea;" text="Tabla de Páginas (Proceso Seleccionado)">
                  <padding>
                <Insets bottom="5.0" left="5.0" top="5.0" />
@@ -160,6 +161,31 @@
                  </columns>
              </TableView>
          </VBox>
+            <VBox prefHeight="200.0" prefWidth="200.0">
+               <children>
+                  <Label maxWidth="Infinity" style="-fx-background-color: #eaeaea;" text="Log de Accesos a Memoria (Traducciones de Direcciones)">
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" top="5.0" />
+                     </padding>
+                     <font>
+                        <Font name="System Bold" size="12.0" />
+                     </font>
+                  </Label>
+                  <TableView fx:id="tablaLogAccesos" VBox.vgrow="ALWAYS">
+                     <columns>
+                        <TableColumn fx:id="colLogPID" prefWidth="50.0" text="PID" />
+                        <TableColumn fx:id="colLogProceso" prefWidth="80.0" text="Proceso" />
+                        <TableColumn fx:id="colLogDirVirtual" prefWidth="90.0" text="Dir. Virtual" />
+                        <TableColumn fx:id="colLogDirFisica" prefWidth="90.0" text="Dir. Física" />
+                        <TableColumn fx:id="colLogPagina" prefWidth="70.0" text="Página" />
+                        <TableColumn fx:id="colLogMarco" prefWidth="70.0" text="Marco" />
+                        <TableColumn fx:id="colLogTLB" prefWidth="70.0" text="TLB" />
+                     </columns>
+                  </TableView>
+               </children>
+            </VBox>
+        </items>
+      </SplitPane>
    </center>
 
 </BorderPane>

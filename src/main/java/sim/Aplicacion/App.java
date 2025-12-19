@@ -12,7 +12,6 @@ import sim.recorder.RScriptRunner;
  */
 public class App extends Application {
 
-
     /**
      * Metodo de inicio de la aplicación JavaFX.
      * Instancia el coordinador de la aplicación y le pasa el escenario principal.
@@ -28,20 +27,16 @@ public class App extends Application {
     /**
      * Método que se ejecuta al cerrar la ventana principal.
      * Limpia los archivos temporales (imágenes y datos CSV).
-     * Fuerza el cierre del sistema para finalizar todos los hilos.
      *
      * @throws Exception si ocurre un error al detener la aplicación
      */
     @Override
     public void stop() throws Exception {
-        // Limpiar archivos temporales
         System.out.println("Limpiando archivos temporales...");
 
-        // Limpiar imágenes temporales generadas por R
         RScriptRunner tempRunner = new RScriptRunner("dummy");
         tempRunner.limpiarArchivosTemporales();
 
-        // Limpiar archivos CSV de datos
         Auditador.limpiarArchivosTemporales();
 
         System.out.println("Archivos temporales eliminados. Cerrando aplicación...");
@@ -51,7 +46,7 @@ public class App extends Application {
     }
 
     /**
-     * Método principal que lanza la aplicación JavaFX.
+     * Metodo principal que lanza la aplicación JavaFX.
      *
      * @param args argumentos de línea de comandos
      */

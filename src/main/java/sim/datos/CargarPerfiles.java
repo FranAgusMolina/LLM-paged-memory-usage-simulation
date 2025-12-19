@@ -51,14 +51,11 @@ public class CargarPerfiles {
                 while ((linea = reader.readLine()) != null) {
                     linea = linea.trim();
 
-                    // Ignorar líneas vacías y comentarios
                     if (linea.isEmpty() || linea.startsWith("#")) {
                         continue;
                     }
 
-                    // Detectar inicio de nuevo perfil [NombrePerfil]
                     if (linea.startsWith("[") && linea.endsWith("]")) {
-                        // Guardar el perfil anterior si existe
                         if (nombrePerfil != null && !propiedades.isEmpty()) {
                             Perfil perfil = crearPerfil(nombrePerfil, propiedades);
                             if (perfil != null) {
@@ -66,12 +63,9 @@ public class CargarPerfiles {
                             }
                         }
 
-                        // Iniciar nuevo perfil
                         nombrePerfil = linea.substring(1, linea.length() - 1).trim();
                         propiedades = new LinkedHashMap<>();
-                    }
-                    // Leer propiedad clave=valor
-                    else if (linea.contains("=")) {
+                    } else if (linea.contains("=")) {
                         String[] partes = linea.split("=", 2);
                         if (partes.length == 2) {
                             propiedades.put(partes[0].trim(), partes[1].trim());
@@ -79,7 +73,6 @@ public class CargarPerfiles {
                     }
                 }
 
-                // Guardar el último perfil
                 if (nombrePerfil != null && !propiedades.isEmpty()) {
                     Perfil perfil = crearPerfil(nombrePerfil, propiedades);
                     if (perfil != null) {
@@ -97,7 +90,11 @@ public class CargarPerfiles {
     }
 
     /**
-     * Crea un objeto Perfil a partir de las propiedades leídas.
+     * Crea un objeto Perfil a partir de las propiedades leídas del archivo.
+     *
+     * @param nombre nombre del perfil
+     * @param props mapa de propiedades clave-valor
+     * @return objeto Perfil configurado, o null si las propiedades son inválidas
      */
     private static Perfil crearPerfil(String nombre, Map<String, String> props) {
         try {

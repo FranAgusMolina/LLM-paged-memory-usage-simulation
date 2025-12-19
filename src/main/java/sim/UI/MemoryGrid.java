@@ -14,11 +14,12 @@ import sim.modelo.Perfil;
 public class MemoryGrid extends GridPane {
     private Rectangle[] bloquesVisuales;
     private Perfil perfil;
+
     /**
      * Crea una nueva grilla de memoria con la cantidad de marcos especificada.
      *
      * @param totalMarcos cantidad total de marcos físicos a mostrar
-     * @param perfil
+     * @param perfil perfil de configuración que define el número de columnas
      */
     public MemoryGrid(int totalMarcos, Perfil perfil) {
         this.setHgap(2);

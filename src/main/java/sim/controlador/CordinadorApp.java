@@ -129,6 +129,7 @@ public class CordinadorApp {
         uiController.setRScriptRunner(rRunner);
 
         simulador.setOnUpdate(() -> Platform.runLater(this::sincronizarSimulacion));
+        simulador.setOnMemoryAccess(log -> Platform.runLater(() -> uiController.agregarLogAcceso(log)));
 
         uiController.getTablaProcesos().getSelectionModel().selectedItemProperty()
                 .addListener((obs, oldVal, newVal) -> {
@@ -241,6 +242,7 @@ public class CordinadorApp {
 
         // 5. Reconectar UI (mantener callbacks)
         simulador.setOnUpdate(() -> Platform.runLater(this::sincronizarSimulacion));
+        simulador.setOnMemoryAccess(log -> Platform.runLater(() -> uiController.agregarLogAcceso(log)));
 
         // 6. Actualizar RScriptRunner con nuevo CSV
         String nombreCSV = auditador.getNombreArchivo();
@@ -253,6 +255,7 @@ public class CordinadorApp {
             uiController.actualizarEstadisticas(0, 0);
             uiController.actualizarTablaTLB(Collections.emptyMap());
             uiController.mostrarTablaPaginas(Collections.emptyMap());
+            uiController.limpiarLogAccesos();
             refrescarVistaVisual();
         });
 
@@ -292,6 +295,7 @@ public class CordinadorApp {
 
         // 7. Reconectar callbacks
         simulador.setOnUpdate(() -> Platform.runLater(this::sincronizarSimulacion));
+        simulador.setOnMemoryAccess(log -> Platform.runLater(() -> uiController.agregarLogAcceso(log)));
 
         // 8. Actualizar RScriptRunner con nuevo CSV
         String nombreCSV = auditador.getNombreArchivo();
@@ -304,6 +308,7 @@ public class CordinadorApp {
             uiController.actualizarEstadisticas(0, 0);
             uiController.actualizarTablaTLB(Collections.emptyMap());
             uiController.mostrarTablaPaginas(Collections.emptyMap());
+            uiController.limpiarLogAccesos();
             refrescarVistaVisual();
         });
 

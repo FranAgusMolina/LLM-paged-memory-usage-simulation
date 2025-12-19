@@ -33,36 +33,28 @@ public class ControladorConfig {
      */
     @FXML
     public void initialize() {
-        // PRIMERO: Configurar Spinner de TLB (rango: 4 a 512, step: 4)
         spinnerTamanioTLB.setValueFactory(
             new SpinnerValueFactory.IntegerSpinnerValueFactory(4, 512, 32, 4)
         );
 
-        // PRIMERO: Configurar Spinner de Tamaño de Marco (rango: 16 a 256, step: 16)
         spinnerTamanioMarco.setValueFactory(
             new SpinnerValueFactory.IntegerSpinnerValueFactory(16, 256, 64, 16)
         );
 
-        // SEGUNDO: Cargar perfiles desde archivo perfiles.txt
         perfiles = CargarPerfiles.cargar();
 
         if (perfiles.isEmpty()) {
             System.err.println("⚠️ No se cargaron perfiles. Usando valores por defecto.");
             comboPerfil.setDisable(true);
         } else {
-            // Agregar nombres de perfiles al ComboBox (mantiene orden de lectura)
             comboPerfil.getItems().addAll(perfiles.keySet());
 
-            // Seleccionar el primer perfil por defecto
             String primerPerfil = perfiles.keySet().iterator().next();
             comboPerfil.setValue(primerPerfil);
 
-            // Cargar valores del primer perfil (ahora los Spinners ya tienen ValueFactory)
             cargarValoresDePerfil(perfiles.get(primerPerfil));
         }
 
-
-        // Listener para actualizar spinners cuando cambia el perfil
         comboPerfil.setOnAction(event -> {
             String nombrePerfil = comboPerfil.getValue();
             if (nombrePerfil != null && perfiles.containsKey(nombrePerfil)) {
@@ -131,7 +123,6 @@ public class ControladorConfig {
         System.out.println("   Tamaño TLB: " + tamanioTLB);
         System.out.println("   Tamaño Marco: " + tamanioMarco);
 
-        // Ejecutar callback si está configurado
         if (onAplicarCallback != null) {
             onAplicarCallback.run();
         }

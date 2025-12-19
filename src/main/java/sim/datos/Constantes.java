@@ -1,5 +1,9 @@
 package sim.datos;
 
+/**
+ * Constantes de configuración visual para la interfaz gráfica.
+ * Define los colores semánticos usados en la representación de memoria.
+ */
 public class Constantes {
     // --- Colores Semánticos ---
     public static final String COLOR_LIBRE = "#E0E0E0";      // Gris

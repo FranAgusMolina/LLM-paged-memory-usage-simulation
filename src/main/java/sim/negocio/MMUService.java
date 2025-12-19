@@ -2,6 +2,7 @@ package sim.negocio;
 
 import sim.modelo.Frame;
 import sim.modelo.LLMProcess;
+import sim.modelo.MemoryAccessLog;
 import sim.modelo.PhysicalMemory;
 
 import java.util.Map;
@@ -80,6 +81,43 @@ public class MMUService {
         }
 
         return (marcoFisico != null) ? marcoFisico : -1;
+    }
+
+    /**
+     * Traduce una dirección virtual a física y retorna un log detallado del acceso.
+     *
+     * @param proceso proceso de LLM
+     * @param tokenIndex índice del token (dirección virtual)
+     * @return registro detallado del acceso a memoria, o null si no existe la traducción
+     */
+    public MemoryAccessLog traducirDireccionConLog(LLMProcess proceso, int tokenIndex) {
+        int paginaVirtual = tokenIndex / pageSize;
+        int offsetEnPagina = tokenIndex % pageSize;
+
+        Integer marcoFisico = tlb.buscar(proceso.getPid(), paginaVirtual);
+        boolean tlbHit = (marcoFisico != null);
+
+        if (marcoFisico == null) {
+            marcoFisico = proceso.getPageTable().getMarcoFisico(paginaVirtual);
+
+            if (marcoFisico != null) {
+                tlb.agregarEntrada(proceso.getPid(), paginaVirtual, marcoFisico);
+            } else {
+                return null;
+            }
+        }
+
+        int direccionFisica = marcoFisico * pageSize + offsetEnPagina;
+
+        return new MemoryAccessLog(
+            tokenIndex,
+            direccionFisica,
+            paginaVirtual,
+            marcoFisico,
+            tlbHit,
+            proceso.getPid(),
+            proceso.getNombre()
+        );
     }
 
     /**

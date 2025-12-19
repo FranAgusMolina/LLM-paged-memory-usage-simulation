@@ -45,6 +45,16 @@ public class ControladorUI {
     @FXML private TableColumn<Map.Entry<String, Integer>, Integer> colTLBPagina;
     @FXML private TableColumn<Map.Entry<String, Integer>, Integer> colTLBMarcoFisico;
 
+    @FXML private TableView<sim.modelo.MemoryAccessLog> tablaLogAccesos;
+    @FXML private TableColumn<sim.modelo.MemoryAccessLog, Integer> colLogPID;
+    @FXML private TableColumn<sim.modelo.MemoryAccessLog, String> colLogProceso;
+    @FXML private TableColumn<sim.modelo.MemoryAccessLog, Integer> colLogDirVirtual;
+    @FXML private TableColumn<sim.modelo.MemoryAccessLog, Integer> colLogDirFisica;
+    @FXML private TableColumn<sim.modelo.MemoryAccessLog, Integer> colLogPagina;
+    @FXML private TableColumn<sim.modelo.MemoryAccessLog, Integer> colLogMarco;
+    @FXML private TableColumn<sim.modelo.MemoryAccessLog, String> colLogTLB;
+
+
 
 
     private MemoryGrid memoryGrid;
@@ -62,6 +72,7 @@ public class ControladorUI {
         configurarTablaProcesos();
         configurarTablaPaginas();
         configurarTablaTLB();
+        configurarTablaLogAccesos();
     }
 
     /**
@@ -105,6 +116,26 @@ public class ControladorUI {
 
         colTLBMarcoFisico.setCellValueFactory(cell ->
                 new SimpleIntegerProperty(cell.getValue().getValue()).asObject());
+    }
+
+    /**
+     * Configura el binding de la tabla de log de accesos a memoria.
+     */
+    private void configurarTablaLogAccesos() {
+        colLogPID.setCellValueFactory(cell ->
+                new SimpleIntegerProperty(cell.getValue().getPid()).asObject());
+        colLogProceso.setCellValueFactory(cell ->
+                new SimpleStringProperty(cell.getValue().getNombreProceso()));
+        colLogDirVirtual.setCellValueFactory(cell ->
+                new SimpleIntegerProperty(cell.getValue().getDireccionVirtual()).asObject());
+        colLogDirFisica.setCellValueFactory(cell ->
+                new SimpleIntegerProperty(cell.getValue().getDireccionFisica()).asObject());
+        colLogPagina.setCellValueFactory(cell ->
+                new SimpleIntegerProperty(cell.getValue().getNumeroPagina()).asObject());
+        colLogMarco.setCellValueFactory(cell ->
+                new SimpleIntegerProperty(cell.getValue().getNumeroMarco()).asObject());
+        colLogTLB.setCellValueFactory(cell ->
+                new SimpleStringProperty(cell.getValue().getTlbResultado()));
     }
 
     /**
@@ -228,6 +259,30 @@ public class ControladorUI {
         if (tablaTLB != null) {
             tablaTLB.getItems().clear();
             tablaTLB.getItems().addAll(cacheTLB.entrySet());
+        }
+    }
+
+    /**
+     * Agrega una entrada al log de accesos a memoria.
+     *
+     * @param log registro de acceso a memoria
+     */
+    public void agregarLogAcceso(sim.modelo.MemoryAccessLog log) {
+        if (tablaLogAccesos != null && log != null) {
+            tablaLogAccesos.getItems().add(0, log);
+
+            if (tablaLogAccesos.getItems().size() > 100) {
+                tablaLogAccesos.getItems().remove(100, tablaLogAccesos.getItems().size());
+            }
+        }
+    }
+
+    /**
+     * Limpia el log de accesos a memoria.
+     */
+    public void limpiarLogAccesos() {
+        if (tablaLogAccesos != null) {
+            tablaLogAccesos.getItems().clear();
         }
     }
 

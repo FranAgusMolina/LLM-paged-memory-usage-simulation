@@ -1,14 +1,15 @@
 package sim.negocio;
 
 import sim.modelo.LLMProcess;
+import sim.modelo.MemoryAccessLog;
 import sim.modelo.Perfil;
 import sim.modelo.PhysicalMemory;
 import sim.recorder.Auditador;
-import sim.datos.Constantes;
 
-import java.util. List;
-import java.util. Random;
-import java.util. concurrent.CopyOnWriteArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 /**
  * Administra la simulación de procesos LLM y la gestión de memoria.
@@ -24,6 +25,7 @@ public class SimulationManager implements Runnable{
     private final Object pauseLock = new Object();
     private final Random random = new Random();
     private Runnable onUpdateCallback;
+    private Consumer<MemoryAccessLog> onMemoryAccessCallback;
     private Thread simulationThread;
     private int ciclo = 0;
     private Perfil perfil;
@@ -141,6 +143,15 @@ public class SimulationManager implements Runnable{
     }
 
     /**
+     * Establece un callback que se ejecuta cada vez que se registra un acceso a memoria.
+     *
+     * @param callback función consumidora que recibe el log de acceso
+     */
+    public void setOnMemoryAccess(Consumer<MemoryAccessLog> callback) {
+        this.onMemoryAccessCallback = callback;
+    }
+
+    /**
      * Lógica principal del ciclo de simulación.
      * Mantiene el contador de ciclos entre pausas.
      */
@@ -164,10 +175,15 @@ public class SimulationManager implements Runnable{
 
                 for (LLMProcess proceso : procesosActivos) {
                     try {
-                        mmu. asignarMemoriaParaToken(proceso);
-                        mmu.traducirDireccion(proceso, proceso.getContadorTokens() - 1);
+                        mmu.asignarMemoriaParaToken(proceso);
+
+                        MemoryAccessLog log = mmu.traducirDireccionConLog(proceso, proceso.getContadorTokens() - 1);
+
+                        if (log != null && onMemoryAccessCallback != null) {
+                            onMemoryAccessCallback.accept(log);
+                        }
                     } catch (Exception e) {
-                        System.err. println("Error con proceso " + proceso.getPid() + ": " + e.getMessage());
+                        System.err.println("Error con proceso " + proceso.getPid() + ": " + e.getMessage());
                         eliminarProceso(proceso);
                     }
                 }
